@@ -28,6 +28,8 @@ sub getHidTEMPer{
 	#** @var $sensorID XXX
 	my $sensorID = $temper->device();
 
+	#** temporary workaroud
+	sleep(1);
 	return $sensorID->internal()->celsius();
 }
 
