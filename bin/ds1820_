@@ -1,0 +1,66 @@
+#!/usr/bin/perl -w
+
+#** @file HidTEMPer.pl
+# @verbatim
+#####################################################################
+# This program is not guaranteed to work at all, and by using this  #
+# program you release the author of any and all liability.          #
+#                                                                   #
+# You may use this code as long as you are in compliance with the   #
+# license (see the LICENSE file) and this notice, disclaimer and    #
+# comment box remain intact and unchanged.                          #
+#                                                                   #
+# Class:       bcmHidTEMPer                                         #
+# Description: munin plugin for HidTEMPer sensor                    #
+#                                                                   #
+# Written by:  Imran Shamshad (sid@projekt-turm.de)                 #
+##################################################################### 
+# @endverbatim
+#
+# @copy 2011, Imran Shamhad (sid@projekt-turm.de)
+# $Id: $HidTEMPer.pl
+#*
+
+#** replace with "basedir" or so
+BEGIN { push @INC, '/opt/rpi-sensors/lib' }
+
+use strict;
+use warnings;
+
+use sensors;
+use Munin::Plugin;
+
+my $sensorID;
+
+if( !($0=~ m\ds1820_(.*)\) ){
+	die "unable to read ID of DS1820 from filename";
+}
+$sensorID = $1;
+
+if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
+	if( !(getTempDS1820($sensorID) eq "U") ){
+		print "yes\n";
+		exit(0);
+	} else {
+		print "no\n";
+		exit(1);
+	}
+}
+
+if (defined $ARGV[0] && $ARGV[0] eq 'config') {
+print <<EOM;
+graph_title		DS1820 $sensorID temperature
+graph_args		--base 1000 -l 0
+graph_info		This graph shows the temperature of DS1820 $sensorID in degrees celsius. 
+graph_category		sensors
+graph_vlabel		temp in °C
+$sensorID.label		DS1820 $sensorID Temperature
+$sensorID.warning		15.0:30.0
+$sensorID.critical	10.0:40.0
+EOM
+exit(0);
+}
+else{
+#	my $temp = avgTemp(\&getTempDS1820, "3", "4", $sensorID);
+	print "$sensorID.value ", avgTemp(\&getTempDS1820, "3", "4", $sensorID);
+}
