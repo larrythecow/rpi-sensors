@@ -31,18 +31,14 @@ use sensors;
 use Munin::Plugin;
 
 my $sensorID;
-my $sensorName="ds1820_";
-my @temp;
-my $fh;
-my $storage;
 
-if( !($0=~ m\ds1820_(.*)\) ){
-	die "unable to read ID of DS1820 from filename";
+if( !($0=~ m\dht11_(.*)\) ){
+	die "unable to read ID of DHT11 from filename";
 }
 $sensorID = $1;
 
 if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
-	if( !(getTempDS1820($sensorID) eq "U") ){
+	if( !(getDHT11($sensorID) eq "U") ){
 		print "yes\n";
 		exit(0);
 	} else {
@@ -53,23 +49,34 @@ if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
 
 if (defined $ARGV[0] && $ARGV[0] eq 'config') {
 print <<EOM;
-graph_title DS1820 $sensorID temperature 
-graph_vlabel °C
+graph_title humidity and temperature of DHT11 sensor $sensorID
+graph_args --upper-limit 200 -l -50
+graph_vlabel °C and %
 graph_category sensors
 
-$sensorID.label		DS1820 $sensorID Temperature
-$sensorID.warning	15.0:20.0
-$sensorID.critical	10.0:30.0
+temp.label °C
+temp.warning 15.0:30.0
+temp.critical 10.0:40.0
+
+humi.label %
+humi.warning 20.0:50.0
+humi.critical 10.0:60.0
 EOM
 exit(0);
 }
 else{
+	my @temp;
+	my $fh;
+	my $storage;
 
-        open ($fh, "</tmp/cron/$sensorName$sensorID") || die "cant open file /tmp/cron/$sensorName$sensorID: $!\n";
-        $storage = <$fh>;
-        close $fh;
+	open ($fh, "+</tmp/cron/dht11-$sensorID") || die "cant open file: $!\n";
+	$storage = <$fh>;
+	close $fh;
 
-        chomp($storage);
+	chomp($storage);
+	@temp = split(' ', $storage);
+#	($temp, $humi) = avgTemp(\&getDHT11, 1, 3, 3, $sensorID);
 
-        print "$sensorID.value $storage\n";
+	print "temp.value $temp[0]\n";
+	print "humi.value $temp[1]\n";
 }

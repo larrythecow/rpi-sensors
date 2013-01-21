@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-#** @file HidTEMPer.pl
+#** @file template.pl
 # @verbatim
 #####################################################################
 # This program is not guaranteed to work at all, and by using this  #
@@ -10,15 +10,15 @@
 # license (see the LICENSE file) and this notice, disclaimer and    #
 # comment box remain intact and unchanged.                          #
 #                                                                   #
-# Class:       bcmHidTEMPer                                         #
-# Description: munin plugin for HidTEMPer sensor                    #
+# Class:       template                                         #
+# Description: munin plugin for template sensor                    #
 #                                                                   #
 # Written by:  Imran Shamshad (sid@projekt-turm.de)                 #
 ##################################################################### 
 # @endverbatim
 #
 # @copy 2011, Imran Shamhad (sid@projekt-turm.de)
-# $Id: $HidTEMPer.pl
+# $Id: $template.pl
 #*
 
 BEGIN { push @INC, '/opt/rpi-sensors/lib' }
@@ -29,29 +29,41 @@ use warnings;
 use sensors;
 use Munin::Plugin;
 
+my $sensorID;
+my $sensorName="hidtemper";
+my @temp;
+my $fh;
+my $storage;
+
 if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
-	if( !(HidTEMPer_temp() eq "U") ){
-		print "yes\n";
-		exit(0);
-	} else {
-		print "no\n";
-		exit(1);
-	}
+        if( !(getHidTEMPer() eq "U") ){
+                print "yes\n";
+                exit(0);
+        } else {
+                print "no\n";
+                exit(1);
+        }
 }
 
 if (defined $ARGV[0] && $ARGV[0] eq 'config') {
 print <<EOM;
-graph_title		HidTEMPer temperature
-graph_args		--base 1000 -l 0
-graph_info		This graph shows the HidTEMPer in degrees celsius. 
-graph_category		sensors
-graph_vlabel		temp in °C
-HidTEMPer.label		HidTEMPer Temperature
-HidTEMPer.warning	15.0:40.0
-HidTEMPer.critical	10.0:30.0
+graph_title		$sensorName temperature
+graph_vlabel	°C
+graph_category	sensors
+
+$sensorName.label		°C
+$sensorName.warning	15.0:40.0
+$sensorName.critical	10.0:30.0
 EOM
 exit(0);
 }
 else{
-	print "HidTEMPer.value ", avgTemp(\&getHidTEMPer, "3", "4");;
+        open ($fh, "+</tmp/cron/$sensorName") || die "cant open file: $!\n";
+        $storage = <$fh>;
+        close $fh;
+
+        chomp($storage);
+#        @temp = split(' ', $storage);
+
+        print "$sensorName.value $storage\n";
 }
