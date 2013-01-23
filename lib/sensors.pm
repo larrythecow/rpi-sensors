@@ -81,9 +81,14 @@ sub getHidTEMPer{
 	#** @var $sensorID XXX
 	my $sensorID = $temper->device();
 
-	$curTemp[0] = $sensorID->internal()->celsius();
+	if(defined $sensorID->internal() ){
+		$curTemp[0] = $sensorID->internal()->celsius();
+	}
+	else{
+		return -1;
+	}
 
-	if($curTemp[0] < -40 || $curTemp[0] > 120){
+	if($curTemp[0] < -40 || $curTemp[0] > 120){	# || $curTemp[0] == 53.171875){
                 return -1;
         }
 
