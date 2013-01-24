@@ -52,8 +52,8 @@ graph_vlabel	°C
 graph_category	sensors
 
 $sensorName.label		°C
-$sensorName.warning	15.0:20.0
-$sensorName.critical	10.0:25.0
+$sensorName.warning	15.0:25.0
+$sensorName.critical	10.0:30.0
 EOM
 exit(0);
 }

@@ -3,27 +3,17 @@
 use strict;
 use warnings;
 use List::Util qw(sum);
+use POSIX;
 use Device::USB::PCSensor::HidTEMPer;
 use Data::Dumper;
 
 #** @var $fh default fileHandler
 my $fh;
-
-#** @var $temperature stores multible temperatures
-my $temperature;
-#** @var $hydro stores multible hydro values 
-my $hydro;
-
 #** @var @temp multi purporage XXX storage
 my @temp;
 #** @var $debug debug flag, 3 print return values, 4 print temperatures, 5 print function references
 my $debug=1;
-#** @var $temper stores HidTEMPer object
-my $temper;
-#** @var @curTemp stores current temperature
-my @curTemp;
-#** @var $curHum stores current humidity
-my $curHum;
+my $LogPath="/tmp/sensor-debug";
 
 my $call;
 
@@ -34,35 +24,47 @@ my $call;
 # @retval 'char U' if error
 #* 
 sub getDHT11{
+	#** @var @curTemp stores current temperature
+	my $curTemp;
+	#** @var $curHum stores current humidity
+	my $curHum;
+
         if($debug >= 3){
                 print "\tgetDHT11\n";
         }
 
         if( !(-r '/opt/rpi-sensors/lib/3rdparty/Adafruit-Raspberry-Pi-Python-Code/Adafruit_DHT_Driver/Adafruit_DHT') ){
-                return -1;
+                return (-1, -1);
         }
 
         @temp = `/opt/rpi-sensors/lib/3rdparty/Adafruit-Raspberry-Pi-Python-Code/Adafruit_DHT_Driver/Adafruit_DHT 11 $_[0]`;
 	
 	if( !(defined $temp[2]) ){
-		return -1;
+		return (-1, -1);
 	}
 
         if( !($temp[2] =~ m/^Temp\ =\ (.*)\*C/) ){
-                return -1;
+                return (-1, -1);
         }
         else{  
-                $curTemp[0] = $1;
+                $curTemp = $1;
         }
 
 	if( !($temp[2] =~ m/Hum\ =\ (.*)\ \%/) ){
-                return -1;
+                return (-1, -1);
         }
         else{
-                $curTemp[1] = $1;
+                $curHum = $1;
         }
-	system("echo `date +%Y-%m-%d_%H:%M:%S` @curTemp >> /tmp/dht11_$_[0]"); 
-	return @curTemp;
+
+	if($debug >= 1){
+		system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp $curHum >> $LogPath/dht11_$_[0]");
+		if($debug >=2){
+			print "\t\tgetDHT11 $curTemp $curHum\n";
+		}
+	}
+	
+	return ($curTemp, $curHum);
 }
 
 
@@ -73,22 +75,37 @@ sub getDHT11{
 # @retval 'char U' if error
 #* 
 sub getHidTEMPer{
+	#** @var @curTemp stores current temperature
+	my $curTemp;
+	my $temper;
+	my $sensor;
+
         if($debug >= 3){
                 print "\tgetHidTEMPer\n";
         }
 
-	my $temper = Device::USB::PCSensor::HidTEMPer->new();
+	$temper = Device::USB::PCSensor::HidTEMPer->new();
 	#** @var $sensorID XXX
-	my $sensorID = $temper->device();
+	$sensor = $temper->device();
 
-	$curTemp[0] = $sensorID->internal()->celsius();
+	if(defined $sensor->internal() ){
+		$curTemp = $sensor->internal()->celsius();
+	}
+	else{
+		return -1;
+	}
 
-	if($curTemp[0] < -40 || $curTemp[0] > 120){
+	if($curTemp < -40 || $curTemp > 120){	# || $curTemp[0] == 53.171875){
                 return -1;
         }
 
-	system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp[0] >> /tmp/hidtemper");
-	return $curTemp[0];
+	if($debug >= 1){
+		system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp >> $LogPath//hidtemper");
+		if($debug >=2){
+			print "\t\tgetHidTEMPer $curTemp\n";
+		}
+	}
+	return $curTemp;
 }
 
 #** @function public bcm2708Temp ()
@@ -97,6 +114,9 @@ sub getHidTEMPer{
 # @retval 'char U' if error
 #* 
 sub getBCM2708{
+	my $curTemp;
+	my @temp;
+	
         if($debug >= 3){
                 print "\tgetBCM2708\n";
         }
@@ -110,10 +130,16 @@ sub getBCM2708{
                 return -1;
         }
         else{
-                $curTemp[0] = $1;
+                $curTemp = $1;
         }
-	system("echo `date +%Y-%m-%d_%H:%M:%S` @curTemp >> /tmp/bcm2708");
-        return $curTemp[0];
+
+	if($debug >= 1){
+		system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp >> $LogPath/bcm2708");
+		if($debug >=2){
+			print "\t\tgetBCM2708 $curTemp\n";
+		}
+	}
+        return $curTemp;
 }
 
 
@@ -124,6 +150,9 @@ sub getBCM2708{
 # @retval 'char U' if error
 #* 
 sub getTempDS1820{
+	my $curTemp;
+	my @temp;
+	
 	if($debug >= 3){
 		print "\tgetTempDS1820\n";
 	}
@@ -133,31 +162,34 @@ sub getTempDS1820{
 	@temp = <$fh>;
 	close($fh);
 
-        if(  !($temp[0]=~ m\YES\) ){
+        if(  !($temp[0] =~ m\YES\) ){
                 return -1;
         }
-	elsif( !($temp[1]=~ m\t=(.*)\) ){
+	elsif( !($temp[1] =~ m\t=(.*)\) ){
 		return -1;
 	}
 	elsif($1 < -55000 || $1 > 125000){
 		return -1;
 	}
 	else{
-		$curTemp[0] = $1/1000;
-		system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp[0] >> /tmp/ds1820_$_[0]");
-#		system("echo `date +%Y-%m-%d_%H:%M:%S` $temp[0] $temp[1] $temp[2] >> /tmp/ds1820_debug_$_[0]");
+		$curTemp = $1/1000;
+		if($debug >= 1){
+			system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp >> $LogPath/ds1820_$_[0]");
 
-        	open ($fh, "+>>/tmp/ds1820_debug_$_[0]") || die "cant open file /tmp/ds1820_debug_$_[0]: $!\n";
-	        print $fh @temp;
-		close $fh;
+        		open ($fh, "+>>$LogPath/ds1820_debug_$_[0]") || die "cant open file $LogPath/ds1820_debug_$_[0]: $!\n";
+		        print $fh @temp;
+			close $fh;
+			if($debug >=2){
+				print "\t\tgetTempDS1820 $curTemp\n";
+			}
+		}
 
-
-		return $curTemp[0];
+		return $curTemp;
 	}
 }
 
-#** @function public avgTemp ($func, $count, $tolerance, $sensorID])
-# @brief get DS1820 temperature 
+#** @function public fillArray ($func, $count, $tolerance, $sensorID])
+# @brief XXX
 # @param required $func $_[0] XXX
 # @param required $count $_[1] XXX
 # @param required $tolerance $_[2] XXX
@@ -167,85 +199,50 @@ sub getTempDS1820{
 # @retval 'float NUM' temperature if no error
 # @retval 'char U' if error
 #* 
-
-#sub fillArray{
-sub avgTemp{
+sub fillArray{
 	my $i;
-#	$call = ( caller(0) )[1];
-#	if($debug >=3){
-#		print "caller: $call\n";
-#	}
+	#** @var @temperature stores multible temperatures
+	my @temperature;
+	#** @var @hydro stores multible hydro values 
+	my @hydro;
+	my $curTemp;
+	my $curHydro;
 
-	undef $temperature;
-	undef $hydro;
-
-	for($i=0, $i<$_[1], $i++){
+	for($i=0; $i<$_[1]; $i++){
 		# if Temperature+Hydro
 		if( ($_[0]) eq (\&getDHT11) ){
-			if($_[0]($_[4]) != -1){
-				if( !(defined $temperature) or !(defined $hydro) ){
-					$temperature = $curTemp[0];
-					$hydro = $curTemp[1];
-				}
-				else{  
-					$temperature = ($curTemp[0]+$temperature)/2;
-					$hydro = ($curTemp[1]+$hydro)/2;
-				}
-			}
+			($temperature[$i], $hydro[$i]) = $_[0]($_[4]);
 		}
 		# if Temperature
 		else{
-			if($_[0]($_[4]) != -1){
-				if( !(defined $temperature) or !(defined $hydro) ){
-					$temperature = $curTemp[0];
-				}
-				else{   
-					$temperature = ($curTemp[0]+$temperature)/2;
-				}
-			}
+			$temperature[$i] = $_[0]($_[4]);
 		}
-	sleep($_[3]);
+		sleep($_[3]);
 	}
+	
 
-	if( ($_[0]) eq (\&getDHT11) ){	
-		if($debug >= 3){
-			print "fillArray -> temperature:$temperature hydro:$hydro\n";
-		}
-		 return ( $temperature, $hydro );
+	if( ($_[0]) eq (\&getDHT11) ){
+		return ( avgTemp(\@temperature), avgTemp(\@hydro) );
 	}
 	else{
-		if($debug >= 3){
-			print "fillArray -> temperature:$temperature\n";
-		}
-		return $temperature;
+		return avgTemp(\@temperature);;
 	}
 }
 
 
-=com
 
-#** @function public avgTemp ($func, $count, $tolerance, $sensorID])
+#** @function public avgTemp (@array)
 # @brief get DS1820 temperature 
-# @param required $func XXX
-# @param required $count XXX
-# @param required $tolerance XXX
-# @param optional $sensorID XXX
+# @param required @array
 # @todo if array value 'U' delete item
 # @retval 'float NUM' temperature if no error
 # @retval 'char U' if error
 #* 
 sub avgTemp{
-
-	$call = ( caller(0) )[1];
-
-	fillArray($_[0], $_[1], $_[3]);
-#	print Dumper @temperature;
-#	print Dumper @hydro;
-#	print "sensors.pm\tavgTemp: ", (sum(@temperature)/@temperature);
-#	print "\tavgHydro: ", (sum(@hydro)/@hydro);
-	
-	return ( $temperature, $hydro );
+	my @array = @{$_[0]};
+	@array = sort @array;
+	return $array[floor( ($#array+1)/2 )];
 }
-=cut
 
 1;
+
