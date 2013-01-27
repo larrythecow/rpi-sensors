@@ -68,7 +68,7 @@ sub getDHT11{
 }
 
 
-#** @function public  getHidTEMPer()
+#** @function public getHidTEMPer()
 # @brief get HidTEMPer temperature 
 # @todo add UniqID if possible need another sensor!
 # @retval 'float NUM' if no error
@@ -110,7 +110,7 @@ sub getHidTEMPer{
 	return $curTemp;
 }
 
-#** @function public bcm2708Temp ()
+#** @function public getBCM2708()
 # @brief get bcm2708 temperature 
 # @retval 'float NUM' if no error
 # @retval 'char U' if error
