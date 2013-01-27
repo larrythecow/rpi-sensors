@@ -2,24 +2,22 @@
 
 use strict;
 use warnings;
-use List::Util qw(sum);
 use POSIX;
 use Device::USB::PCSensor::HidTEMPer;
 use Data::Dumper;
+use Statistics::Basic qw(:all);
+
 
 #** @var $fh default fileHandler
 my $fh;
-#** @var @temp multi purporage XXX storage
-my @temp;
-#** @var $debug debug flag, 3 print return values, 4 print temperatures, 5 print function references
+#** @var $debug debug flag
 my $debug=1;
+#** @var $LogPath debug log path
 my $LogPath="/tmp/sensor-debug";
-
-my $call;
 
 #** @function public  getDHT11($gpio)
 # @brief get DHT11 temperature and humidity
-# @param requiered $gpio gpio where sensor is connected
+# @param requiered $gpio $_[0] GPIO PIN where sensor is connected
 # @retval 'float NUM' if no error
 # @retval 'char U' if error
 #* 
@@ -28,30 +26,32 @@ sub getDHT11{
 	my $curTemp;
 	#** @var $curHum stores current humidity
 	my $curHum;
+        #** @var @temp multi purporage storage
+        my @temp;
 
         if($debug >= 3){
                 print "\tgetDHT11\n";
         }
 
         if( !(-r '/opt/rpi-sensors/lib/3rdparty/Adafruit-Raspberry-Pi-Python-Code/Adafruit_DHT_Driver/Adafruit_DHT') ){
-                return (-1, -1);
+                return ('U', 'U');
         }
 
         @temp = `/opt/rpi-sensors/lib/3rdparty/Adafruit-Raspberry-Pi-Python-Code/Adafruit_DHT_Driver/Adafruit_DHT 11 $_[0]`;
 	
 	if( !(defined $temp[2]) ){
-		return (-1, -1);
+		return ('U', 'U');
 	}
 
         if( !($temp[2] =~ m/^Temp\ =\ (.*)\*C/) ){
-                return (-1, -1);
+                return ('U', 'U');
         }
         else{  
                 $curTemp = $1;
         }
 
 	if( !($temp[2] =~ m/Hum\ =\ (.*)\ \%/) ){
-                return (-1, -1);
+                return ('U', 'U');
         }
         else{
                 $curHum = $1;
@@ -77,7 +77,9 @@ sub getDHT11{
 sub getHidTEMPer{
 	#** @var @curTemp stores current temperature
 	my $curTemp;
+	#** @var $temper stores HidTEMPer object
 	my $temper;
+	#** @var $sensor stores HidTEMPer sensor
 	my $sensor;
 
         if($debug >= 3){
@@ -85,19 +87,19 @@ sub getHidTEMPer{
         }
 
 	$temper = Device::USB::PCSensor::HidTEMPer->new();
-	#** @var $sensorID XXX
+
 	$sensor = $temper->device();
 
 	if(defined $sensor->internal() ){
 		$curTemp = $sensor->internal()->celsius();
 	}
 	else{
-		return -1;
+		return 'U';
 	}
 
 	if($curTemp < -40 || $curTemp > 120){	# || $curTemp[0] == 53.171875){
-                return -1;
-        }
+        return 'U';
+    }
 
 	if($debug >= 1){
 		system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp >> $LogPath//hidtemper");
@@ -114,7 +116,9 @@ sub getHidTEMPer{
 # @retval 'char U' if error
 #* 
 sub getBCM2708{
+        #** @var @curTemp stores current temperature
 	my $curTemp;
+	#** @var @temp multi purporage storage
 	my @temp;
 	
         if($debug >= 3){
@@ -122,12 +126,12 @@ sub getBCM2708{
         }
 
         if( !(-r '/opt/vc/bin/vcgencmd') ){
-                return -1;
+                return 'U';
         }
 
         @temp = `/opt/vc/bin/vcgencmd measure_temp`;
         if( !($temp[0] =~ m/^temp=(.*)'C$/) ){
-                return -1;
+                return 'U';
         }
         else{
                 $curTemp = $1;
@@ -145,12 +149,14 @@ sub getBCM2708{
 
 #** @function public getTempDS1820 ($ID)
 # @brief get DS1820 temperature 
-# @param requiered $ID ID of Sensor
+# @param requiered $ID $_[0] ID of Sensor
 # @retval 'float NUM' temperature if no error
 # @retval 'char U' if error
 #* 
 sub getTempDS1820{
+	#** @var @curTemp stores current temperature
 	my $curTemp;
+	#** @var @temp multi purporage storage
 	my @temp;
 	
 	if($debug >= 3){
@@ -158,18 +164,17 @@ sub getTempDS1820{
 	}
 
 	open($fh, "<", "/sys/bus/w1/devices/$_[0]/w1_slave") or return "-1";
-	#** @var @temp stores recived string
 	@temp = <$fh>;
 	close($fh);
 
         if(  !($temp[0] =~ m\YES\) ){
-                return -1;
+                return 'U';
         }
 	elsif( !($temp[1] =~ m\t=(.*)\) ){
-		return -1;
+		return 'U';
 	}
 	elsif($1 < -55000 || $1 > 125000){
-		return -1;
+		return 'U';
 	}
 	else{
 		$curTemp = $1/1000;
@@ -190,12 +195,11 @@ sub getTempDS1820{
 
 #** @function public fillArray ($func, $count, $tolerance, $sensorID])
 # @brief XXX
-# @param required $func $_[0] XXX
-# @param required $count $_[1] XXX
-# @param required $tolerance $_[2] XXX
-# @param required $sleep $_[3]
-# @param optional $sensorID $_[4] XXX
-# @todo if array value 'U' delete item
+# @param required $func $_[0] sensor function which will be called 
+# @param required $count $_[1] count ... XXX
+# @param required $tolerance $_[2] NOT IN USE
+# @param required $sleep $_[3] delay between measure
+# @param optional $sensorID $_[4] ID or GPIO of sensor
 # @retval 'float NUM' temperature if no error
 # @retval 'char U' if error
 #* 
@@ -203,15 +207,15 @@ sub fillArray{
 	my $i;
 	#** @var @temperature stores multible temperatures
 	my @temperature;
-	#** @var @hydro stores multible hydro values 
-	my @hydro;
-	my $curTemp;
+	#** @var @humidity stores multible hydro values 
+	my @humidity;
+	
 	my $curHydro;
 
 	for($i=0; $i<$_[1]; $i++){
-		# if Temperature+Hydro
+		# if temperature+humidity
 		if( ($_[0]) eq (\&getDHT11) ){
-			($temperature[$i], $hydro[$i]) = $_[0]($_[4]);
+			($temperature[$i], $humidity[$i]) = $_[0]($_[4]);
 		}
 		# if Temperature
 		else{
@@ -222,7 +226,7 @@ sub fillArray{
 	
 
 	if( ($_[0]) eq (\&getDHT11) ){
-		return ( avgTemp(\@temperature), avgTemp(\@hydro) );
+		return ( avgTemp(\@temperature), avgTemp(\@humidity) );
 	}
 	else{
 		return avgTemp(\@temperature);;
@@ -233,15 +237,27 @@ sub fillArray{
 
 #** @function public avgTemp (@array)
 # @brief get DS1820 temperature 
-# @param required @array
-# @todo if array value 'U' delete item
+# @param required @array $_[0] 
 # @retval 'float NUM' temperature if no error
 # @retval 'char U' if error
 #* 
 sub avgTemp{
 	my @array = @{$_[0]};
-	@array = sort @array;
-	return $array[floor( ($#array+1)/2 )];
+
+my $pos=0;
+while (defined $array[$pos]){
+        if ($array[$pos] =~ m/U/ ){
+                splice(@array, $pos, 1);
+        }
+        else{   
+                $pos++;
+        }
+}
+
+if( !(defined $array[0]) ){
+        return 'U';
+}
+return mean(@array);
 }
 
 1;
