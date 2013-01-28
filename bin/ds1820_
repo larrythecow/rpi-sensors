@@ -65,7 +65,7 @@ exit(0);
 }
 else{
 
-        open ($fh, "</tmp/cron/$sensorName$sensorID") || die "cant open file /tmp/cron/$sensorName$sensorID: $!\n";
+        open ($fh, join('', '<', "/opt/tmp/cron/", $sensorName, $sensorID)) || die "cant open file: $!\n";
         $storage = <$fh>;
         close $fh;
 

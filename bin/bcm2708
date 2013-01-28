@@ -63,7 +63,7 @@ exit(0);
 else{   
 
 
-        open ($fh, "+</tmp/cron/$sensorName") || die "cant open file: $!\n";
+        open ($fh, "+</opt/tmp/cron/$sensorName") || die "cant open file: $!\n";
         $storage = <$fh>;
         close $fh;
 

@@ -67,7 +67,7 @@ EOM
 exit(0);
 }
 else{
-        open ($fh, "</tmp/cron/$sensorName$sensorID") || die "cant open file /tmp/cron/$sensorName$sensorID: $!\n";
+        open ($fh, "</opt/tmp/cron/dht11_14") || die "cant open file /tmp/cron/$sensorName$sensorID: $!\n";
         $storage = <$fh>;
         close $fh;
 

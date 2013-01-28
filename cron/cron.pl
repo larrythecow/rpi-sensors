@@ -1,58 +1,49 @@
 #!/usr/bin/perl
 
+
 use strict;
 use warnings;
-use Cwd;
+use Data::Dumper;
+use FileHandle;
+use File::Basename;
 
-#BEGIN { push @INC, join('/', cwd(), "../lib")  }
-BEGIN { push @INC, "/opt/rpi-sensors/lib/"  }
+BEGIN { push @INC, join("/", dirname($0), "../lib/")  }
+#BEGIN { push @INC, "/opt/rpi-sensors/lib/" }
 use sensors;
 
-my $temp;
-my $humi;
+my $path="/opt/tmp/cron/";
 my $fh;
-my $sensorID;
-my $path="/tmp/cron/";
-my $filename;
+my $temperature;
+my $humidity;
 
-$filename="bcm2708";
-$temp = fillArray(\&getBCM2708, 3, 3, 3);
-print "cpu: $temp\n";
-open ($fh, join('', ">", $path, $filename)) || die "cant open file: $!\n";
-print $fh "$temp";
-close $fh;
+print Dumper %sensor;
+print dirname($0);
 
+print "\nforeach \n";
+foreach my $type(keys %sensor){
+	
+	print "\t$sensor{$type}->{name} \n";
+	if (defined $sensor{$type}->{ID}){
+		foreach my $id ( @{$sensor{$type}->{ID}} ){
+			open ($fh, join('', ">", $path, $sensor{$type}->{name}, "_", $id)) || die "cant open file: $!\n";
+			if($type eq "dht11"){
+				($temperature, $humidity) =  fillArray($sensor{$type}->{command}, 3, 3, $id);
+				print "\t\t$sensor{$type}->{name}\t$id\t$temperature $humidity\n";
+				print $fh "$temperature $humidity";
+			}
+			else{
+                                $temperature =  fillArray($sensor{$type}->{command}, 3, 3, $id);
+                                print "\t\t$sensor{$type}->{name}\t$id\t$temperature\n";
+                                print $fh "$temperature";
 
-$sensorID=14;
-$filename="dht11_";
-($temp, $humi) = fillArray(\&getDHT11, 3, 3, 3, $sensorID);
-print "dht11: $temp, $humi\n";
-open ($fh, join('', ">", $path, $filename, $sensorID)) || die "cant open file: $!\n";
-print $fh "$temp $humi";
-close $fh;
-system("echo `date +%Y-%m-%d_%H:%M:%S` $temp $humi >> $path/dht11_DEBUG_$sensorID");
-
-$sensorID="10-0008028a96de";
-$filename="ds1820_";
-$temp = fillArray(\&getTempDS1820, 3, 3, 3, $sensorID);
-print "$filename $sensorID $temp\n";
-open ($fh, join('', ">", $path, $filename, $sensorID)) || die "cant open file: $!\n";
-print $fh "$temp";
-close $fh;
-
-
-$sensorID="10-0008028a9788";
-$filename="ds1820_";
-$temp = fillArray(\&getTempDS1820, 3, 3, 3, $sensorID);
-print "$filename $sensorID $temp\n";
-open ($fh, join('', ">", $path, $filename, $sensorID)) || die "cant open file: $!\n";
-print $fh "$temp";
-close $fh;
-
-
-$temp = fillArray(\&getHidTEMPer, 3, 3, 3);
-$filename="hidtemper";
-print "$filename $temp\n";
-open ($fh, join('', ">", $path, $filename)) || die "cant open file: $!\n";
-print $fh "$temp";
-close $fh;
+			}
+			close $fh;
+		}
+	}
+	else{
+		open ($fh, join('', ">", $path, $sensor{$type}->{name})) || die "cant open file: $!\n";
+		$temperature =  fillArray($sensor{$type}->{command}, 3, 3);
+		print "\t\t$sensor{$type}->{name}\t$temperature\n";
+		print $fh "$temperature";
+	}
+}

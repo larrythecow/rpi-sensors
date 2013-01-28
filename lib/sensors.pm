@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+package sensors;
+
 use strict;
 use warnings;
 use POSIX;
@@ -7,13 +9,41 @@ use Device::USB::PCSensor::HidTEMPer;
 use Data::Dumper;
 use Statistics::Basic qw(:all);
 
+use Exporter;
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+$VERSION = '0.0.1';
+@ISA         = qw(Exporter);
+@EXPORT      = qw(getDHT11 getHidTEMPer getBCM2708 getTempDS1820 fillArray %sensor);
 
 #** @var $fh default fileHandler
 my $fh;
 #** @var $debug debug flag
 my $debug=1;
 #** @var $LogPath debug log path
-my $LogPath="/tmp/sensor-debug";
+my $LogPath="/opt/tmp/sensor-debug";
+
+#** @var %sensor i am really ugly; write a function
+our %sensor = (
+        ds1820 => {
+                name    => "ds1820",
+                command =>  \&getTempDS1820,
+                ID      =>  ["10-0008028a96de", "10-0008028a9788"],
+        },
+        bcm2708 => {
+                name    => "bcm2708",
+                command => \&getBCM2708,
+        },
+        dht11 => {
+                name    => "dht11",
+                command => \&getDHT11,
+                ID      => ["14"],
+        },
+        hidtemper => {
+                name    => "HidTEMPer",
+                command => \&getHidTEMPer,
+        },
+);
+
 
 #** @function public  getDHT11($gpio)
 # @brief get DHT11 temperature and humidity
@@ -98,9 +128,12 @@ sub getHidTEMPer{
 	}
 
 	if($curTemp < -40 || $curTemp > 120){	# || $curTemp[0] == 53.171875){
-        return 'U';
-    }
-
+        	return 'U';
+	}
+	elsif($curTemp > 52 && $curTemp < 53){   # || $curTemp[0] == 53.171875){
+        	return 'U';
+        }
+	
 	if($debug >= 1){
 		system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp >> $LogPath//hidtemper");
 		if($debug >=2){
@@ -193,13 +226,12 @@ sub getTempDS1820{
 	}
 }
 
-#** @function public fillArray ($func, $count, $tolerance, $sensorID])
+#** @function public fillArray ($func, $count, $sleep, $sensorID])
 # @brief XXX
 # @param required $func $_[0] sensor function which will be called 
 # @param required $count $_[1] count ... XXX
-# @param required $tolerance $_[2] NOT IN USE
-# @param required $sleep $_[3] delay between measure
-# @param optional $sensorID $_[4] ID or GPIO of sensor
+# @param required $sleep $_[2] delay between measure
+# @param optional $sensorID $_[3] ID or GPIO of sensor
 # @retval 'float NUM' temperature if no error
 # @retval 'char U' if error
 #* 
@@ -215,13 +247,13 @@ sub fillArray{
 	for($i=0; $i<$_[1]; $i++){
 		# if temperature+humidity
 		if( ($_[0]) eq (\&getDHT11) ){
-			($temperature[$i], $humidity[$i]) = $_[0]($_[4]);
+			($temperature[$i], $humidity[$i]) = $_[0]($_[3]);
 		}
 		# if Temperature
 		else{
-			$temperature[$i] = $_[0]($_[4]);
+			$temperature[$i] = $_[0]($_[3]);
 		}
-		sleep($_[3]);
+		sleep($_[2]);
 	}
 	
 

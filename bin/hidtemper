@@ -30,7 +30,7 @@ use sensors;
 use Munin::Plugin;
 
 my $sensorID;
-my $sensorName="hidtemper";
+my $sensorName="HidTEMPer";
 my @temp;
 my $fh;
 my $storage;
@@ -58,7 +58,7 @@ EOM
 exit(0);
 }
 else{
-        open ($fh, "</tmp/cron/$sensorName") || die "cant open file /tmp/cron/$sensorName: $!\n";
+        open ($fh, "</opt/tmp/cron/$sensorName") || die "cant open file /tmp/cron/$sensorName: $!\n";
         $storage = <$fh>;
         close $fh;
 
