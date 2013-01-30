@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-#** @file HidTEMPer.pl
+#** @file template.pl
 # @verbatim
 #####################################################################
 # This program is not guaranteed to work at all, and by using this  #
@@ -10,45 +10,80 @@
 # license (see the LICENSE file) and this notice, disclaimer and    #
 # comment box remain intact and unchanged.                          #
 #                                                                   #
-# Class:       bcmHidTEMPer                                         #
-# Description: munin plugin for HidTEMPer sensor                    #
+# Class:       template                                         #
+# Description: munin plugin for template sensor                    #
 #                                                                   #
 # Written by:  Imran Shamshad (sid@projekt-turm.de)                 #
-##################################################################### 
+#####################################################################
 # @endverbatim
 #
 # @copy 2011, Imran Shamhad (sid@projekt-turm.de)
-# $Id: $HidTEMPer.pl
+# $Id: $template.pl
 #*
-
-#** replace with "basedir" or so
-BEGIN { push @INC, '/opt/rpi-sensors/lib' }
 
 use strict;
 use warnings;
+use File::Basename;
+use Munin::Plugin;
+use YAML::XS;
 
+BEGIN { push @INC, join("/", dirname($0), "../lib/")  }
 use sensors;
 use Munin::Plugin;
 
 my $sensorID;
-my $sensorName="ds1820_";
+my $sensorType="ds1820";
+my $sensorName;
 my @temp;
 my $fh;
 my $storage;
+my $path = join("/", dirname($0), "../");
+my $temperature;
+my $humidity;
+my $logPath="/opt/tmp/";
+
+my $conf = YAML::XS::LoadFile("$path/../tmp/test.yml");
+my %yml = %$conf;
 
 if( !($0=~ m\ds1820_(.*)\) ){
 	die "unable to read ID of DS1820 from filename";
 }
 $sensorID = $1;
 
-if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
-	if( !(getTempDS1820($sensorID) eq "U") ){
-		print "yes\n";
-		exit(0);
-	} else {
-		print "no\n";
-		exit(1);
+print "ID: $sensorID\n";
+foreach my $type(%yml){
+        if($type eq $sensorType){
+		my $i=0;
+		print "type: $type\n";
+		if(defined $yml{$type}->{id}){
+			foreach my $id ( @{$yml{$type}->{id}} ){
+				if($id eq $sensorID){
+					print "DEBUG $id [$i]\n";
+					$temperature=$yml{$sensorType}->{'temperature'}->[$i];
+					$sensorName = $yml{$sensorType}->{'name'}->[$i];
+					if(defined $yml{$sensorType}->{'humidity'}->[$i]){
+						$humidity=$yml{$sensorType}->{'humidity'}->[$i];
+					}
+				}
+				$i++;
+			}
+		}
+		else{
+			$temperature=$yml{$sensorType}->{'temperature'}->[0];
+		}
 	}
+}
+
+
+
+if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
+        if( (defined $yml{$sensorType}->{'temperature'}->[0]) ){
+                print "yes\n";
+                exit(0);
+        } else {
+                print "no\n";
+                exit(1);
+        }
 }
 
 if (defined $ARGV[0] && $ARGV[0] eq 'config') {
@@ -65,11 +100,8 @@ exit(0);
 }
 else{
 
-        open ($fh, join('', '<', "/opt/tmp/cron/", $sensorName, $sensorID)) || die "cant open file: $!\n";
-        $storage = <$fh>;
-        close $fh;
-
-        chomp($storage);
-
-        print "$sensorID.value $storage\n";
+	print "temp.value $temperature\n";
+	if(defined $humidity){
+		print "humi.value $humidity\n";
+	}
 }

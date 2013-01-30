@@ -8,42 +8,26 @@ use POSIX;
 use Device::USB::PCSensor::HidTEMPer;
 use Data::Dumper;
 use Statistics::Basic qw(:all);
-
+use Readonly;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 $VERSION = '0.0.1';
 @ISA         = qw(Exporter);
-@EXPORT      = qw(getDHT11 getHidTEMPer getBCM2708 getTempDS1820 fillArray %sensor);
+@EXPORT      = qw(getDHT11 getHidTEMPer getBCM2708 getTempDS1820 fillArray %func);
 
 #** @var $fh default fileHandler
 my $fh;
 #** @var $debug debug flag
-my $debug=1;
+my $debug=0;
 #** @var $LogPath debug log path
 my $LogPath="/opt/tmp/sensor-debug";
 
-#** @var %sensor i am really ugly; write a function
-our %sensor = (
-        ds1820 => {
-                name    => "ds1820",
-                command =>  \&getTempDS1820,
-                ID      =>  ["10-0008028a96de", "10-0008028a9788"],
-        },
-        bcm2708 => {
-                name    => "bcm2708",
-                command => \&getBCM2708,
-        },
-        dht11 => {
-                name    => "dht11",
-                command => \&getDHT11,
-                ID      => ["14"],
-        },
-        hidtemper => {
-                name    => "HidTEMPer",
-                command => \&getHidTEMPer,
-        },
+Readonly::Hash our %func=>(
+        ds1820 => \&getTempDS1820,
+        bcm2708 => \&getBCM2708,
+        hidtemper => \&getHidTEMPer,
+        dht11 => \&getDHT11
 );
-
 
 #** @function public  getDHT11($gpio)
 # @brief get DHT11 temperature and humidity
@@ -147,7 +131,8 @@ sub getHidTEMPer{
 # @brief get bcm2708 temperature 
 # @retval 'float NUM' if no error
 # @retval 'char U' if error
-#* 
+#*
+# @todo check if it should be getBCM2708 or getBCM2835 
 sub getBCM2708{
         #** @var @curTemp stores current temperature
 	my $curTemp;
@@ -289,6 +274,8 @@ while (defined $array[$pos]){
 if( !(defined $array[0]) ){
         return 'U';
 }
+# @todo check strange return values of mean
+# @todo difference betwean mean() and median()
 return mean(@array);
 }
 
