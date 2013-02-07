@@ -1,0 +1,6 @@
+DB:
+   host: localhost
+   adapter: mysql
+   database: sensor
+   user: root
+   pass: pfwaKTrYCWE
