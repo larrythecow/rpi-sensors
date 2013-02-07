@@ -13,7 +13,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 $VERSION = '0.0.1';
 @ISA         = qw(Exporter);
-@EXPORT      = qw(getDHT11 getHidTEMPer getBCM2708 getTempDS1820 fillArray %func);
+@EXPORT      = qw(getDHT11 getHidTEMPer getBCM2708 getTempDS1820 fillArray getValuesFromHash getSensorNameFromHash %func);
 
 #** @var $fh default fileHandler
 my $fh;
@@ -277,6 +277,86 @@ if( !(defined $array[0]) ){
 # @todo check strange return values of mean
 # @todo difference betwean mean() and median()
 return mean(@array);
+}
+
+#** @function public getValuesFromHash (@array)
+# @brief XXX
+# @param required %hash $_[0] 
+# @param required $sensorType $_[1]
+# @param optional $sensorID $[3]
+# @retval 'float NUM' temperature if no error
+# @retval 'char U' if error
+#*
+sub getValuesFromHash{
+#my(%yml, $sensorType, $sensorID) = @_;
+my %yml = %{$_[0]};
+my $sensorType = $_[1];
+my $sensorID = $_[2];
+my $sensorName;
+my $temperature;
+my $humidity;
+
+if( !(defined $sensorID) ){
+	$sensorID=0;
+}
+	foreach my $type(%yml){
+        	if($type eq $sensorType){
+	                my $i=0;
+                	if(defined $yml{$type}->{id}){
+                        	foreach my $id ( @{$yml{$type}->{id}} ){
+                                	if($id eq $sensorID){
+	                                        $temperature=$yml{$sensorType}->{'temperature'}->[$i];
+        	                                $sensorName = $yml{$sensorType}->{'name'}->[$i];
+                	                        if(defined $yml{$sensorType}->{'humidity'}->[$i]){
+                        	                        $humidity=$yml{$sensorType}->{'humidity'}->[$i];
+                                	        }
+	                                }
+        	                        $i++;
+                	        }
+	                }
+        	        else{
+                	        $temperature=$yml{$sensorType}->{'temperature'}->[0];
+	                }
+        	}
+	}
+
+if (defined $humidity){
+	return ($temperature, $humidity);
+}
+else{
+	return $temperature;
+}
+
+}
+
+
+sub getSensorNameFromHash{
+my %yml = %{$_[0]};
+my $sensorType = $_[1];
+my $sensorID = $_[2];
+my $sensorName;
+
+if( !(defined $sensorID) ){
+        $sensorID=0;
+}
+        foreach my $type(%yml){
+                if($type eq $sensorType){
+                        my $i=0;
+                        if(defined $yml{$type}->{id}){
+                                foreach my $id ( @{$yml{$type}->{id}} ){
+                                        if($id eq $sensorID){
+                                                return $yml{$sensorType}->{'name'}->[$i];
+                                        }
+                                        $i++;
+                                }
+                        }
+			else{
+				return $yml{$sensorType}->{'name'}->[0];
+			}
+                }
+        }
+
+        return "Unknown Name";
 }
 
 1;
