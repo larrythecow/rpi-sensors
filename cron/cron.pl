@@ -29,11 +29,13 @@ foreach my $type(keys %yml){
                                 print "\t\t$yml{$type}->{name}->[$i]\t$id\t$temperature $humidity\n";
 				$yml{$type}->{'temperature'}->[$i]= "$temperature";
 				$yml{$type}->{'humidity'}->[$i]= "$humidity";
+				$yml{$type}->{'time'}->[$i] = time;
                         }
                         else{  
                                 $temperature =  fillArray($func{$type}, 3, 3, $id);
                                 print "\t\t$yml{$type}->{name}->[$i]\t$id\t$temperature [$i]\n";
 				$yml{$type}->{'temperature'}->[$i]= "$temperature";
+				$yml{$type}->{'time'}->[$i] = time;
                         }
 		$i++;
                 }
@@ -42,9 +44,10 @@ foreach my $type(keys %yml){
                 $temperature =  fillArray($func{$type}, 3, 3);
                 print "\t\t$yml{$type}->{name}->[0]\t$temperature\n";
 		$yml{$type}->{'temperature'}->[0]= "$temperature";
+		$yml{$type}->{'time'}->[0] = time;
         }
 }
 
 YAML::XS::DumpFile("$logPath/test.yml", $conf);
-#print "\n######### test ###########\n";
-#print Dumper $conf;
+`$path/net/send.pl`;
+
