@@ -1,3 +1,4 @@
 doc/
 test/
 *-old
+net/config.yml
