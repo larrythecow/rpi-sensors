@@ -47,7 +47,8 @@ sub sqlCreate {
         FOREIGN KEY (sensor_id) REFERENCES sensor(sensor_id),
         temp FLOAT,
         hydro FLOAT,
-        radiation FLOAT
+        radiation FLOAT,
+        time TIMESTAMP
         ) engine innodb;"
     ) or die $_[0]->errstr;
 }
@@ -87,7 +88,6 @@ sub sql {
     $sthCheck->execute( $_[1], $_[2] );
     $host = $sthCheck->fetchrow_hashref;
     $sthCheck->finish() or die $dbh->errstr;
-    print Dumper  $host;
 
     #** insert sensor if not in DB
     $sth = $dbh->prepare("INSERT INTO sensor(host_id, typ, name, uuid) VALUES (?,?,?,?);")
@@ -101,8 +101,6 @@ sub sql {
             foreach my $id ( @{ $yml{$type}->{id} } ) {
                 $sthCheck->execute( $host->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
                 if ( my $hash_ref = $sthCheck->rows ) {
-                    print
-                      "ALREADY IN DB$host->{'host_id'}\t $type\t $yml{$type}->{name}->[$i]\t $id\n";
                 }
                 else {
                     $sth->execute( $host->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id )
@@ -114,7 +112,6 @@ sub sql {
         else {
             $sthCheck->execute( $host->{'host_id'}, $type, $yml{$type}->{name}->[0], 0 );
             if ( my $hash_ref = $sthCheck->rows ) {
-                print "ALREADY IN DB$host->{'host_id'}\t $type\t $yml{$type}->{name}->[0]\t 0\n";
             }
             else {
                 $sth->execute( $host->{'host_id'}, $type, $yml{$type}->{name}->[0], 0 )
@@ -127,7 +124,7 @@ sub sql {
 
     #** insert values
     $sthCheck = $dbh->prepare("select sensor.sensor_id from host inner join sensor using (host_id) where host.host_id=? and typ like ? and sensor.name like ? and uuid like ?;");
-    $sth = $dbh->prepare("INSERT INTO data(sensor_id, temp, hydro) VALUES (?,?,?);");
+    $sth = $dbh->prepare("INSERT INTO data(sensor_id, temp, hydro, time ) VALUES (?,?,?, FROM_UNIXTIME(?));");
     foreach my $type ( keys %yml ) {
         print "\t$type\n";
         if ( defined $yml{$type}->{id} ) {
@@ -136,12 +133,12 @@ sub sql {
                 if ( $type eq "dht11" ) {
                     $sthCheck->execute($host->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
                     $sensor = $sthCheck->fetchrow_hashref;
-                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i]);
+                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
                 }
                 else {
                     $sthCheck->execute($host->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
                     $sensor = $sthCheck->fetchrow_hashref;
-                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i]);
+                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
                 }
                 $i++;
             }
@@ -149,7 +146,7 @@ sub sql {
         else {
             $sthCheck->execute($host->{'host_id'}, $type, $yml{$type}->{name}->[0], 0 );
             $sensor = $sthCheck->fetchrow_hashref;
-            $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[0], $yml{$type}->{'humidity'}->[0]);
+            $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[0], $yml{$type}->{'humidity'}->[0], $yml{$type}->{'time'}->[0]);
         }
     }
     $sthCheck->finish();
