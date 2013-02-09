@@ -16,12 +16,11 @@ my $humidity;
 my $fh;
 
 
-my $conf = YAML::XS::LoadFile("$path/conf.yml");
+my $conf = YAML::XS::LoadFile("$path/sensor.yml");
 my %yml = %$conf;
 
 foreach my $type(keys %yml){
         print "\t$type\n";
-        if (defined $yml{$type}->{id}){
 	my $i=0;
                 foreach my $id ( @{$yml{$type}->{id}} ){
                         if($type eq "dht11"){
@@ -39,13 +38,6 @@ foreach my $type(keys %yml){
                         }
 		$i++;
                 }
-        }
-        else{   
-                $temperature =  fillArray($func{$type}, 3, 3);
-                print "\t\t$yml{$type}->{name}->[0]\t$temperature\n";
-		$yml{$type}->{'temperature'}->[0]= "$temperature";
-		$yml{$type}->{'time'}->[0] = time;
-        }
 }
 YAML::XS::DumpFile("$logPath/test.yml", $conf);
 `$path/net/send.pl`;

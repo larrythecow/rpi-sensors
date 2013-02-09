@@ -302,7 +302,6 @@ if( !(defined $sensorID) ){
 	foreach my $type(%yml){
         	if($type eq $sensorType){
 	                my $i=0;
-                	if(defined $yml{$type}->{id}){
                         	foreach my $id ( @{$yml{$type}->{id}} ){
                                 	if($id eq $sensorID){
 	                                        $temperature=$yml{$sensorType}->{'temperature'}->[$i];
@@ -313,10 +312,6 @@ if( !(defined $sensorID) ){
 	                                }
         	                        $i++;
                 	        }
-	                }
-        	        else{
-                	        $temperature=$yml{$sensorType}->{'temperature'}->[0];
-	                }
         	}
 	}
 
@@ -342,17 +337,12 @@ if( !(defined $sensorID) ){
         foreach my $type(%yml){
                 if($type eq $sensorType){
                         my $i=0;
-                        if(defined $yml{$type}->{id}){
                                 foreach my $id ( @{$yml{$type}->{id}} ){
                                         if($id eq $sensorID){
                                                 return $yml{$sensorType}->{'name'}->[$i];
                                         }
                                         $i++;
                                 }
-                        }
-			else{
-				return $yml{$sensorType}->{'name'}->[0];
-			}
                 }
         }
 

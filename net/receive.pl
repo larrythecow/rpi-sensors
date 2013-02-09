@@ -96,7 +96,6 @@ sub sql {
 "select * from host inner join sensor using (host_id) where host.host_id=? and typ like ? and sensor.name like ? and uuid like ?;"
     );
     foreach my $type ( keys %yml ) {
-        if ( defined $yml{$type}->{id} ) {
             my $i = 0;
             foreach my $id ( @{ $yml{$type}->{id} } ) {
                 $sthCheck->execute( $host->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
@@ -108,16 +107,6 @@ sub sql {
                 }
                 $i++;
             }
-        }
-        else {
-            $sthCheck->execute( $host->{'host_id'}, $type, $yml{$type}->{name}->[0], 0 );
-            if ( my $hash_ref = $sthCheck->rows ) {
-            }
-            else {
-                $sth->execute( $host->{'host_id'}, $type, $yml{$type}->{name}->[0], 0 )
-                  or die $dbh->errstr;
-            }
-        }
     }
     $sthCheck->finish();
     $sth->finish() or die $dbh->errstr;
@@ -127,7 +116,6 @@ sub sql {
     $sth = $dbh->prepare("INSERT INTO data(sensor_id, temp, hydro, time ) VALUES (?,?,?, FROM_UNIXTIME(?));");
     foreach my $type ( keys %yml ) {
         print "\t$type\n";
-        if ( defined $yml{$type}->{id} ) {
             my $i = 0;
             foreach my $id ( @{ $yml{$type}->{id} } ) {
                 if ( $type eq "dht11" ) {
@@ -142,12 +130,6 @@ sub sql {
                 }
                 $i++;
             }
-        }
-        else {
-            $sthCheck->execute($host->{'host_id'}, $type, $yml{$type}->{name}->[0], 0 );
-            $sensor = $sthCheck->fetchrow_hashref;
-            $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[0], $yml{$type}->{'humidity'}->[0], $yml{$type}->{'time'}->[0]);
-        }
     }
     $sthCheck->finish();
     $sth->finish() or die $dbh->errstr;
