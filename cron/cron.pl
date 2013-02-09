@@ -47,7 +47,5 @@ foreach my $type(keys %yml){
 		$yml{$type}->{'time'}->[0] = time;
         }
 }
-
 YAML::XS::DumpFile("$logPath/test.yml", $conf);
 `$path/net/send.pl`;
-
