@@ -2,3 +2,5 @@ doc/
 test/
 *-old
 net/config.yml
+sensor.yml
+node.yml
