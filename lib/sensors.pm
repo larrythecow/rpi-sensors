@@ -101,10 +101,14 @@ sub getHidTEMPer{
         }
 
 	$temper = Device::USB::PCSensor::HidTEMPer->new();
+	if(defined $temper){
+		$sensor = $temper->device();
+	}
+	else{
+		return 'U'
+	}
 
-	$sensor = $temper->device();
-
-	if(defined $sensor->internal() ){
+	if(defined $sensor){
 		$curTemp = $sensor->internal()->celsius();
 	}
 	else{
@@ -143,17 +147,9 @@ sub getBCM2708{
                 print "\tgetBCM2708\n";
         }
 
-        if( !(-r '/opt/vc/bin/vcgencmd') ){
-                return 'U';
-        }
-
-        @temp = `/opt/vc/bin/vcgencmd measure_temp`;
-        if( !($temp[0] =~ m/^temp=(.*)'C$/) ){
-                return 'U';
-        }
-        else{
-                $curTemp = $1;
-        }
+	open($fh, "<", "/sys/devices/virtual/thermal/thermal_zone0/temp") or return "U";
+	@temp = <$fh>;
+	close($fh);
 
 	if($debug >= 1){
 		system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp >> $LogPath/bcm2708");
@@ -161,7 +157,7 @@ sub getBCM2708{
 			print "\t\tgetBCM2708 $curTemp\n";
 		}
 	}
-        return $curTemp;
+        return ($temp[0]/1000);
 }
 
 
@@ -181,7 +177,7 @@ sub getTempDS1820{
 		print "\tgetTempDS1820\n";
 	}
 
-	open($fh, "<", "/sys/bus/w1/devices/$_[0]/w1_slave") or return "-1";
+	open($fh, "<", "/sys/bus/w1/devices/$_[0]/w1_slave") or return "U";
 	@temp = <$fh>;
 	close($fh);
 
