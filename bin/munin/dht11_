@@ -28,7 +28,7 @@ use Munin::Plugin;
 use YAML::XS;
 use Cwd 'abs_path';
 
-BEGIN { push @INC, join("/", dirname( abs_path($0) ), "../lib/")  }
+BEGIN { push @INC, join("/", dirname( abs_path($0) ), "../../lib/")  }
 use sensors;
 use Munin::Plugin;
 my $sensorID;
@@ -40,7 +40,7 @@ my $temperature;
 my $humidity;
 my $logPath="/opt/tmp/";
 
-my $conf = YAML::XS::LoadFile("$path/../tmp/test.yml");
+my $conf = YAML::XS::LoadFile("$path/../../tmp/test.yml");
 my %yml = %$conf;
 
 if( ($0=~ m\$regex(.*)\) ){
