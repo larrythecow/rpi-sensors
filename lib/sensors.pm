@@ -22,6 +22,7 @@ my $debug=0;
 #** @var $LogPath debug log path
 my $LogPath="/opt/tmp/sensor-debug";
 
+#** @var %func references between sensorname and sensorfunction
 Readonly::Hash our %func=>(
         ds1820 => \&getTempDS1820,
         bcm2708 => \&getBCM2708,
@@ -29,11 +30,11 @@ Readonly::Hash our %func=>(
         dht11 => \&getDHT11
 );
 
-#** @function public  getDHT11($gpio)
+#** @function public getDHT11($gpio)
 # @brief get DHT11 temperature and humidity
-# @param requiered $gpio $_[0] GPIO PIN where sensor is connected
-# @retval 'float NUM' if no error
-# @retval 'char U' if error
+# @param gpio required $_[0] GPIO PIN where sensor is connected
+# @retval temperature if no error
+# @retval U U=unknown, if error
 #* 
 sub getDHT11{
 	#** @var @curTemp stores current temperature
@@ -83,10 +84,9 @@ sub getDHT11{
 
 
 #** @function public getHidTEMPer()
-# @brief get HidTEMPer temperature 
-# @todo add UniqID if possible need another sensor!
-# @retval 'float NUM' if no error
-# @retval 'char U' if error
+# @brief HidTEMPer temperature 
+# @retval temperature if no error
+# @retval U U=unknown, if error
 #* 
 sub getHidTEMPer{
 	#** @var @curTemp stores current temperature
@@ -132,14 +132,11 @@ sub getHidTEMPer{
 }
 
 #** @function public getBCM2708()
-# @brief get bcm2708 temperature 
-# @retval 'float NUM' if no error
-# @retval 'char U' if error
+# @brief bcm2708 temperature, raspberry CPU sensor 
+# @retval temperature if no error
+# @retval U U=unknown, if error
 #*
-# @todo check if it should be getBCM2708 or getBCM2835 
 sub getBCM2708{
-        #** @var @curTemp stores current temperature
-	my $curTemp;
 	#** @var @temp multi purporage storage
 	my @temp;
 	
@@ -161,11 +158,11 @@ sub getBCM2708{
 }
 
 
-#** @function public getTempDS1820 ($ID)
+#** @function public getTempDS1820 ($UID)
 # @brief get DS1820 temperature 
-# @param requiered $ID $_[0] ID of Sensor
-# @retval 'float NUM' temperature if no error
-# @retval 'char U' if error
+# @param UID required $_[0] UID of Sensor
+# @retval temperature if no error
+# @retval U U=unknown, if error
 #* 
 sub getTempDS1820{
 	#** @var @curTemp stores current temperature
@@ -208,13 +205,13 @@ sub getTempDS1820{
 }
 
 #** @function public fillArray ($func, $count, $sleep, $sensorID])
-# @brief XXX
-# @param required $func $_[0] sensor function which will be called 
-# @param required $count $_[1] count ... XXX
-# @param required $sleep $_[2] delay between measure
-# @param optional $sensorID $_[3] ID or GPIO of sensor
-# @retval 'float NUM' temperature if no error
-# @retval 'char U' if error
+# @brief call sensor function count-times and return AVG value
+# @param func required $_[0] sensor function which will be called 
+# @param count required $_[1] run $func n time
+# @param sleep required $_[2] delay between measure
+# @param sensorID optional $_[3] UID or GPIO of sensor
+# @retval temperature if no error
+# @retval U U=unknown, if error
 #* 
 sub fillArray{
 	my $i;
@@ -249,16 +246,16 @@ sub fillArray{
 
 
 #** @function public avgTemp (@array)
-# @brief get DS1820 temperature 
-# @param required @array $_[0] 
-# @retval 'float NUM' temperature if no error
-# @retval 'char U' if error
+# @brief remove false measures and return mean 
+# @param array required $_[0] 
+# @retval temperature if no error
+# @retval U U=unknown, if erro
 #* 
 sub avgTemp{
 	my @array = @{$_[0]};
 
-my $pos=0;
-while (defined $array[$pos]){
+	my $pos=0;
+	while (defined $array[$pos]){
         if ($array[$pos] =~ m/U/ ){
                 splice(@array, $pos, 1);
         }
@@ -267,24 +264,21 @@ while (defined $array[$pos]){
         }
 }
 
-if( !(defined $array[0]) ){
-        return 'U';
-}
-# @todo check strange return values of mean
-# @todo difference betwean mean() and median()
-return mean(@array);
+	if( !(defined $array[0]) ){
+        	return 'U';
+	}
+	return mean(@array);
 }
 
-#** @function public getValuesFromHash (@array)
-# @brief XXX
-# @param required %hash $_[0] 
-# @param required $sensorType $_[1]
-# @param optional $sensorID $[3]
-# @retval 'float NUM' temperature if no error
-# @retval 'char U' if error
+#** @function public getValuesFromHash (%hash, $sensorType, $sensorID)
+# @brief return temperature and/or humidity from yml file
+# @param hash required $_[0]
+# @param sensorType required $_[1]
+# @param sensorID required $_[2]
+# @retval $temperature if temperature sensor 
+# @retval U U=unknown, if error
 #*
 sub getValuesFromHash{
-#my(%yml, $sensorType, $sensorID) = @_;
 my %yml = %{$_[0]};
 my $sensorType = $_[1];
 my $sensorID = $_[2];
@@ -320,7 +314,14 @@ else{
 
 }
 
-
+#** @function public getSensorNameFromHash (%hash, $sensorType, $sensorID)
+# @brief get sensor name 
+# @param hash required $_[0] 
+# @param sensorType required $_[1]
+# @param sensorID optional $[2]
+# @retval sensorName OK 
+# @retval -1 ERROR
+#*
 sub getSensorNameFromHash{
 my %yml = %{$_[0]};
 my $sensorType = $_[1];
@@ -342,7 +343,7 @@ if( !(defined $sensorID) ){
                 }
         }
 
-        return "Unknown Name";
+        return -1;
 }
 
 1;
