@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
-use warnings;
+use warnings "all";
 use IO::Socket::INET;
 use Storable;
 use YAML::XS;
@@ -12,16 +12,17 @@ my $path="/opt/tmp";
 my $fh;
 my @temp;
 
-my $conf = YAML::XS::LoadFile("$path/test.yml");
-my %yml = %$conf;
+my $data = YAML::XS::LoadFile("$path/test.yml");
+my %dataHash = %$data;
+my $node = YAML::XS::LoadFile("$path/node.yml");
+my %nodeHash = %$node;
 
 $sock = IO::Socket::INET->new(
-    PeerPort => 9999,
+    PeerPort => $nodeHash{port},
     PeerAddr => inet_ntoa(INADDR_BROADCAST),
     Proto => getprotobyname('udp'),
-    LocalAddr => '192.168.240.50',
+    LocalAddr => $nodeHash{ip},
     Broadcast => 1 )
 or die "Can't bind : $@\n";
 
-$sock->send( (freeze(%yml)) );
-#Storable::nstore_fd( \%yml, $sock );
+$sock->send( (freeze(%dataHash)) );
