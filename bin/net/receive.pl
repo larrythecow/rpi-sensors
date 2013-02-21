@@ -18,7 +18,7 @@ my $path = join("/", dirname( abs_path($0) ), "../..");
 
 sub sql {
     my %yml    = %{ $_[0] };
-    my $conf   = YAML::XS::LoadFile("config.yml");
+    my $conf   = YAML::XS::LoadFile("$path/mysql.yml");
     my %config = %$conf;
     my $dbh;
     my $sth;
