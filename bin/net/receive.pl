@@ -12,6 +12,7 @@ use YAML::XS;
 use Cwd 'abs_path';
 BEGIN { push @INC, join( "/", dirname( abs_path($0) ), "../../lib/" ) }
 use sensors;
+use sql;
 
 my $path = join("/", dirname( abs_path($0) ), "../..");
 
@@ -32,33 +33,10 @@ sub sql {
     ) or die $dbh->errstr;
 
     sqlCreate( $dbh, $conf );
-    sqlInsertHost( $_[1], $_[2] );
-    $host = sqlGetHost( $_[1], $_[2] );
-    sqlInsertSensor();
-
-    #** insert values
-    $sthCheck = $dbh->prepare("select sensor.sensor_id from host inner join sensor using (host_id) where host.host_id=? and typ like ? and sensor.name like ? and uuid like ?;");
-    $sth = $dbh->prepare("INSERT INTO data(sensor_id, temp, hydro, time ) VALUES (?,?,?, FROM_UNIXTIME(?));");
-    foreach my $type ( keys %yml ) {
-        print "\t$type\n";
-            my $i = 0;
-            foreach my $id ( @{ $yml{$type}->{id} } ) {
-                if ( $type eq "dht11" ) {
-                    $sthCheck->execute($host->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
-                    $sensor = $sthCheck->fetchrow_hashref;
-                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
-                }
-                else {
-                    $sthCheck->execute($host->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
-                    $sensor = $sthCheck->fetchrow_hashref;
-                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
-                }
-                $i++;
-            }
-    }
-    $sthCheck->finish();
-    $sth->finish() or die $dbh->errstr;
-
+    sqlInsertHost( $dbh, $_[1], $_[2] );
+    $host = sqlGetHost($dbh, $_[1], $_[2] );
+    sqlInsertSensor($dbh, \%yml, $host);
+    sqlInsertValues($dbh, \%yml, $host);
 
     $dbh->disconnect();
 }
@@ -79,17 +57,20 @@ sub server {
         Proto => getprotobyname('udp'),
     ) or die "Can't bind : $@\n";
 
-    print Dumper $sock;
+    print "IP: $nodeHash{ip}\n";
 
     while ( my $source = $sock->recv( $text, 4096, 0 ) ) {
         ( $sourcePort, $sourceIP ) = sockaddr_in($source);
         $sourceHost = gethostbyaddr( $sourceIP, AF_INET );
-        print "ip: ", inet_ntoa($sourceIP);
-        print "host: $sourceHost port: $sourcePort\n";
         my %conf = thaw($text);
-
-        #    print "DEBUG: ", inet_aton($sourceIP);
-        sql( \%conf, $sourceHost, inet_ntoa($sourceIP) );
+	if( (defined $sourceHost) ){
+		print "ip: ", inet_ntoa($sourceIP);
+		print "host: $sourceHost port: $sourcePort\n";
+		sql( \%conf, $sourceHost, inet_ntoa($sourceIP) );
+	}
+	else{
+		print "Unable to resolve ", inet_ntoa($sourceIP), "\n";
+	}
     }
 }
 

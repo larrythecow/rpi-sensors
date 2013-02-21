@@ -9,7 +9,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 $VERSION = '0.0.1';
 @ISA         = qw(Exporter);
-@EXPORT      = qw(sqlCreate sqlInsertHost);
+@EXPORT      = qw(sqlCreate sqlInsertHost sqlGetHost sqlInsertSensor sqlInsertValues);
 
 #** @var $debug debug flag
 my $debug=0;
@@ -59,48 +59,76 @@ sub sqlCreate {
 
 sub sqlInsertHost{
     #** insert host if not in DB
-    $sthCheck = $dbh->prepare("select * from host where host.name like ? and host.ip=INET_ATON(?);")
-      or die $dbh->errstr;
+    my $sthCheck = $_[0]->prepare("select * from host where host.name like ? and host.ip=INET_ATON(?);")
+      or die $_[0]->errstr;
     $sthCheck->execute( $_[1], $_[2] );
-    $sth = $dbh->prepare("INSERT INTO host(name, ip) VALUES (?, INET_ATON(?));");
+    my $sth = $_[0]->prepare("INSERT INTO host(name, ip) VALUES (?, INET_ATON(?));");
     if ( !( $sthCheck->rows ) ) {
-        $sth->execute( $_[1], $_[2] ) or die $dbh->errstr;
+        $sth->execute( $_[1], $_[2] ) or die $_[0]->errstr;
         print "host insert into DB $_[1], $_[2] ";
     }
-    $sth->finish()      or die $dbh->errstr;
-    $sthCheck->finish() or die $dbh->errstr;
+    $sth->finish()      or die $_[0]->errstr;
+    $sthCheck->finish() or die $_[0]->errstr;
 
 }
 
 sub sqlGetHost{
     #** get current host
-    $sthCheck = $dbh->prepare("select * from host where host.name like ? and host.ip=INET_ATON(?);");
+    my $sthCheck = $_[0]->prepare("select * from host where host.name like ? and host.ip=INET_ATON(?);");
     $sthCheck->execute( $_[1], $_[2] );
-    $host = $sthCheck->fetchrow_hashref;
-    $sthCheck->finish() or die $dbh->errstr;
+    my $host = $sthCheck->fetchrow_hashref;
+    $sthCheck->finish() or die $_[0]->errstr;
     return $host;
     }
 
 sub sqlInsertSensor{
+    my %yml    = %{ $_[1] };
     #** insert sensor if not in DB
-    $sth = $dbh->prepare("INSERT INTO sensor(host_id, typ, name, uuid) VALUES (?,?,?,?);")
-      or die $dbh->errstr;
-    $sthCheck = $dbh->prepare(
-"select * from host inner join sensor using (host_id) where host.host_id=? and typ like ? and sensor$
+    my $sth = $_[0]->prepare("INSERT INTO sensor(host_id, typ, name, uuid) VALUES (?,?,?,?);")
+      or die $_[0]->errstr;
+    my $sthCheck = $_[0]->prepare(
+    "select * from host inner join sensor using (host_id) where host.host_id=? and typ like ? and sensor.name like ? and uuid like ?;"
     );
     foreach my $type ( keys %yml ) {
             my $i = 0;
             foreach my $id ( @{ $yml{$type}->{id} } ) {
-                $sthCheck->execute( $host->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
+                $sthCheck->execute( $_[2]->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
                 if ( my $hash_ref = $sthCheck->rows ) {
                 }
                 else {
-                    $sth->execute( $host->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id )
-                      or die $dbh->errstr;
+                    $sth->execute( $_[2]->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id )
+                      or die $_[0]->errstr;
                 }
                 $i++;
             }
     }
     $sthCheck->finish();
-    $sth->finish() or die $dbh->errstr;
+    $sth->finish() or die $_[0]->errstr;
+}
+
+sub sqlInsertValues{
+    my %yml    = %{ $_[1] };
+    my $sensor;
+    
+    my $sthCheck = $_[0]->prepare("select sensor.sensor_id from host inner join sensor using (host_id) where host.host_id=? and typ like ? and sensor.name like ? and uuid like ?;");
+    my $sth = $_[0]->prepare("INSERT INTO data(sensor_id, temp, hydro, time ) VALUES (?,?,?, FROM_UNIXTIME(?));");
+    foreach my $type ( keys %yml ) {
+        print "\t$type\n";
+            my $i = 0;
+            foreach my $id ( @{ $yml{$type}->{id} } ) {
+                if ( $type eq "dht11" ) {
+                    $sthCheck->execute($_[2]->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
+                    $sensor = $sthCheck->fetchrow_hashref;
+                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
+                }
+                else {
+                    $sthCheck->execute($_[2]->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
+                    $sensor = $sthCheck->fetchrow_hashref;
+                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
+                }
+                $i++;
+            }
+    }
+    $sthCheck->finish();
+    $sth->finish() or die $_[0]->errstr;
 }
