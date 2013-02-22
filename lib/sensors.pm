@@ -149,9 +149,9 @@ sub getBCM2708{
 	close($fh);
 
 	if($debug >= 1){
-		system("echo `date +%Y-%m-%d_%H:%M:%S` $curTemp >> $LogPath/bcm2708");
+		system("echo `date +%Y-%m-%d_%H:%M:%S` $temp[0] >> $LogPath/bcm2708");
 		if($debug >=2){
-			print "\t\tgetBCM2708 $curTemp\n";
+			print "\t\tgetBCM2708 $temp[0]/1000\n";
 		}
 	}
         return ($temp[0]/1000);

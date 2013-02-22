@@ -1,9 +1,10 @@
 <html>
 <head><title>Test Template</title></head>
 <body>
-<TMPL_VAR NAME=HOST>
+<h1><TMPL_VAR NAME=HOST></h1><br>
 <TMPL_LOOP NAME=SENSOR>
-	<img src="<TMPL_VAR NAME=DAY>"><img src="<TMPL_VAR NAME=WEEK>"><img src="<TMPL_VAR NAME=MONTH>"><img src="<TMPL_VAR NAME=YEAR>"><br>
+	<img src="<TMPL_VAR NAME=DAY>"><img src="<TMPL_VAR NAME=WEEK>"><br>
+	<img src="<TMPL_VAR NAME=MONTH>"><img src="<TMPL_VAR NAME=YEAR>"><br><br><hr>
 </TMPL_LOOP>
 </body>
 </html>

@@ -21,7 +21,8 @@ sub sqlSync {
     my %config = %$conf;
     my $dbhLocal;
     my $sthLocal;
-    my @templateData;
+
+    system("rm /tmp/*rrd");
 
     $dbhLocal = DBI->connect(
         "dbi:mysql::$config{'DB'}->{'host'}",
@@ -33,7 +34,8 @@ sub sqlSync {
     $sthLocal = $dbhLocal->prepare("select * from host") or die $dbhLocal->errstr;
     $sthLocal->execute();
     while (my $hashRefHost = $sthLocal->fetchrow_hashref) {
-	my $template = HTML::Template->new(filename => 'host.tmpl');
+	my $template = HTML::Template->new(filename => "$path/bin/net/host.tmpl");
+	my @templateData;
 	$template->param(HOST => $hashRefHost->{name});
 	my $sthSensor = $dbhLocal->prepare("select sensor.host_id, sensor.sensor_id, sensor.uuid, sensor.typ, sensor.name as sensorname, host.name as hostname from sensor inner join host using(host_id) where sensor.host_id = ?") or die $dbhLocal->errstr;
 	$sthSensor->execute($hashRefHost->{host_id});
@@ -41,24 +43,43 @@ sub sqlSync {
 #		print Dumper $hashRefSensor;
 		my $rrdFileName = "$hashRefSensor->{hostname}_$hashRefSensor->{typ}_$hashRefSensor->{sensorname}";
 		my $rrd = RRD::Simple->new( file => "/tmp/$rrdFileName.rrd") ;
-		$rrd->create(
-        	        temperature => "GAUGE",
+		if($hashRefSensor->{typ} eq "dht11"){
+			$rrd->create(
+        		        temperature => "GAUGE",
+				humidity => "GAUGE",
        	        	);
+		}
+		else{
+                        $rrd->create(
+                                temperature => "GAUGE",
+                        ); 
+		}
 #		print Dumper $hashRefSensor;
-		my $sthData = $dbhLocal->prepare("select data.sensor_id, data.temp, UNIX_TIMESTAMP(data.time) as time from data inner join sensor using(sensor_id) where data.sensor_id = ?") or die $dbhLocal->errstr;
+		my $sthData = $dbhLocal->prepare("select data.sensor_id, data.temp, data.hydro, UNIX_TIMESTAMP(data.time) as time from data inner join sensor using(sensor_id) where data.sensor_id = ?") or die $dbhLocal->errstr;
 		$sthData->execute($hashRefSensor->{sensor_id});
 		while(my $hashRefData = $sthData->fetchrow_hashref){
-			$rrd->update(
-				"/tmp/$rrdFileName.rrd",
-				$hashRefData->{time},
-				temperature => $hashRefData->{temp}
-			);
+			if($hashRefSensor->{typ} eq "dht11"){
+                                $rrd->update(
+                                        "/tmp/$rrdFileName.rrd",
+                                        $hashRefData->{time},
+                                        temperature => $hashRefData->{temp},
+					humidity => $hashRefData->{hydro},
+                                );
+			}
+			else{
+				$rrd->update(
+					"/tmp/$rrdFileName.rrd",
+					$hashRefData->{time},
+					temperature => $hashRefData->{temp}
+				);
+			}
 		}
 		my %rtn = $rrd->graph(
 			destination => "/var/www/tmp",
-			title => "Temperature XYZ",
+			title => "Temperature $hashRefSensor->{typ} $hashRefSensor->{sensorname}",
 			vertical_label => "C",
-			interlaced => ""
+			interlaced => "",
+			extended_legend => 1,
 		);
 #		printf("Created %s\n",join(", ",map { $rtn{$_}->[0] } keys %rtn));
 #		printf("Created %s\n",map { $rtn{$_}->[0] } keys %rtn);
@@ -66,13 +87,13 @@ sub sqlSync {
 		   push(@templateData, {"DAY" => "$rrdFileName-daily.png", "WEEK" => "$rrdFileName-weekly.png", MONTH => "$rrdFileName-monthly.png", YEAR => "$rrdFileName-annual.png" });	
 	}
     $template->param(SENSOR => \@templateData);
-    open FH,">/var/www/tmp/test.html";
+    open FH,">/var/www/tmp/$hashRefHost->{name}.html";
     $template->output(print_to => \*FH);
     close FH;
     }
     $sthLocal->finish() or die $dbhLocal->errstr;
     $dbhLocal->disconnect();
-	print Dumper @templateData;
+#	print Dumper @templateData;
 	system("rm /tmp/*rrd");
 }
 

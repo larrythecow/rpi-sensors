@@ -16,13 +16,18 @@ my $debug=0;
 #** @var $LogPath debug log path
 my $LogPath="/opt/tmp/sensor-debug";
 
-sub sqlCreate {
-    my %config = %{ $_[1] };
 
-    $_[0]->do("CREATE DATABASE IF NOT EXISTS $config{'DB'}->{'database'}")
+#** @function public sqlCreate(%mysql)
+# @brief create mysql DB and Tables 
+# @param mysql required $_[0] mysql login
+#* 
+sub sqlCreate {
+    my %mysql = %{ $_[1] };
+
+    $_[0]->do("CREATE DATABASE IF NOT EXISTS $mysql{'DB'}->{'database'}")
       or die $_[0]->errstr;
 
-    $_[0]->do("use $config{'DB'}->{'database'}") or die $_[0]->errstr;
+    $_[0]->do("use $mysql{'DB'}->{'database'}") or die $_[0]->errstr;
 
     $_[0]->do(
         "CREATE TABLE IF NOT EXISTS  host(
