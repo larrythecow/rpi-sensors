@@ -13,6 +13,8 @@ BEGIN { push @INC, join( "/", dirname( abs_path($0) ), "../../lib/" ) }
 use sensors;
 use sql;
 
+my $DEBUG=3;
+
 my $path = join("/", dirname( abs_path($0) ), "../..");
 
 
@@ -58,6 +60,9 @@ sub sqlSync {
 		my $sthData = $dbhLocal->prepare("select data.sensor_id, data.temp, data.hydro, UNIX_TIMESTAMP(data.time) as time from data inner join sensor using(sensor_id) where data.sensor_id = ?") or die $dbhLocal->errstr;
 		$sthData->execute($hashRefSensor->{sensor_id});
 		while(my $hashRefData = $sthData->fetchrow_hashref){
+			if($DEBUG >2){
+				print "UPDATE:$hashRefData->{time} SENSOR_ID:$hashRefSensor->{sensor_id}\n"
+			}
 			if($hashRefSensor->{typ} eq "dht11"){
                                 $rrd->update(
                                         "/tmp/$rrdFileName.rrd",
