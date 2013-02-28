@@ -10,7 +10,6 @@ BEGIN { push @INC, join("/", dirname($0), "../lib/")  }
 use sensors;
 
 my $path=join("/", dirname($0), "../");
-my $logPath="/opt/tmp/";
 my $temperature;
 my $humidity;
 my $fh;
