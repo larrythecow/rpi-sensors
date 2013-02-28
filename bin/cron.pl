@@ -44,7 +44,7 @@ foreach my $type(keys %yml){
 		$i++;
                 }
 }
-YAML::XS::DumpFile("$logPath/test.yml", $conf);
+YAML::XS::DumpFile("$path/tmp/test.yml", $conf);
 
 print "run $path/bin/net/send.pl\n";
 `$path/bin/net/send.pl`;
