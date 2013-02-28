@@ -1,0 +1,13 @@
+<html>
+<head>
+	<title>Available Hosts</title>
+	<style type="text/css"><TMPL_INCLUDE NAME="style.css"></style>
+</head>
+<body>
+	<h1>List of Available Systems</h1>
+	<p>The following list shows all monitored systems</p>
+	<TMPL_LOOP NAME=HOSTS>
+		<a class="menu" href="<TMPL_VAR NAME=HOSTURL>"><TMPL_VAR NAME=HOSTNAME></a>
+	</TMPL_LOOP>
+</body>
+</html>

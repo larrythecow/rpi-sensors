@@ -1,10 +1,40 @@
 <html>
-<head><title>Test Template</title></head>
+<head>
+	<title><TMPL_VAR NAME=TITLE></title>
+	<style type="text/css"><TMPL_INCLUDE NAME="style.css"></style>
+</head>
+
 <body>
-<h1><TMPL_VAR NAME=HOST></h1><br>
-<TMPL_LOOP NAME=SENSOR>
-	<img src="<TMPL_VAR NAME=DAY>"><img src="<TMPL_VAR NAME=WEEK>"><br>
-	<img src="<TMPL_VAR NAME=MONTH>"><img src="<TMPL_VAR NAME=YEAR>"><br><br><hr>
+<a name="begin"></a> 
+<h1><TMPL_VAR NAME=HOST></h1><a href="index.html" class="menu" style="float:right">back</a>
+<p><TMPL_VAR NAME=IP></p>
+<table border="1">
+  <tr>
+    <th>Type</th>
+    <th>Name</th>
+    <th>ID</th>
+  </tr>
+<TMPL_LOOP NAME=TABLE>
+  <tr>
+    <td><a href="#<TMPL_VAR NAME=ANCHORNAME>"><TMPL_VAR NAME=TYPE></a></td>
+    <td><a href="#<TMPL_VAR NAME=ANCHORNAME>"><TMPL_VAR NAME=NAME></a></td>
+    <td><a href="#<TMPL_VAR NAME=ANCHORNAME>"><TMPL_VAR NAME=ID></a></td>
+  </tr>
 </TMPL_LOOP>
+</table>
+
+<hr>
+<TMPL_LOOP NAME=SENSOR>
+	<a name="<TMPL_VAR NAME=ANCHORNAME>">
+	<TMPL_VAR NAME=TYPE>   <TMPL_VAR NAME=NAME>   <TMPL_VAR NAME=ID></a>
+	<a href="index.html" class="menu" style="float:right">back</a>
+	<a href="#begin" class="menu" style="float:right">up</a>
+	<br><br>
+	<img src="<TMPL_VAR NAME=DAY>"><img src="<TMPL_VAR NAME=WEEK>"><br>
+	<img src="<TMPL_VAR NAME=MONTH>"><img src="<TMPL_VAR NAME=YEAR>"><br>
+	<hr>
+</TMPL_LOOP>
+<a href="index.html" class="menu" style="float:right">back</a>
+<a href="#begin" class="menu" style="float:right">up</a>
 </body>
 </html>

@@ -1,0 +1,27 @@
+
+body{
+	color:#ccc; 
+	background-color:#666666;
+}
+p       {color:#ccc;}
+h1      {color:#ccc;}
+
+a{
+	color:#ccc; 
+	background-color:transparent; 
+}
+a.menu { 
+	display:block; 
+	margin-bottom:5px; 
+	text-align:center; 
+	width:16ex;
+	border-style:ridge; 
+	border-width:3px; 
+	padding:1px; 
+	text-decoration:none;  
+	border-radius: 7px;
+}
+a.menu:link    { color:#ccc; background-color:transparent; }
+a.menu:visited { color:#ccc; background-color:transparent; }
+a.menu:hover   { color:#fff; background-color:#000; }
+a.menu:active  { color:#fff; background-color:#000; }
