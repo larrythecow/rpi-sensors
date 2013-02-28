@@ -14,7 +14,7 @@ my @temp;
 
 my $data = YAML::XS::LoadFile("$path/test.yml");
 my %dataHash = %$data;
-my $node = YAML::XS::LoadFile("$path/node.yml");
+my $node = YAML::XS::LoadFile("$path/../rpi-sensors/node.yml");
 my %nodeHash = %$node;
 
 $sock = IO::Socket::INET->new(
