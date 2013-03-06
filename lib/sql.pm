@@ -284,8 +284,8 @@ sub sqlSync {
 			$NAcount++;
 			$sthRemoteSensor->execute($hashRefLocalData->{ip}, $hashRefLocalData->{hostname}, $hashRefLocalData->{typ}, $hashRefLocalData->{sensorname});
 			my $hashRefRemoteSensor = $sthRemoteSensor->fetchrow_hashref;
-			print "rem:$hashRefRemoteSensor->{sensor_id} ";
-			print "$hashRefLocalData->{ip}, $hashRefLocalData->{time}, $hashRefLocalData->{hostname}, $hashRefLocalData->{uuid}, $hashRefLocalData->{typ}, $hashRefLocalData->{sensorname}\n";
+			print "rem:$hashRefRemoteSensor->{sensor_id}\tloc:$hashRefLocalData->{sensor_id}\t";
+			print "$hashRefLocalData->{ip}\t$hashRefLocalData->{time}\t$hashRefLocalData->{hostname}\t$hashRefLocalData->{uuid}\t$hashRefLocalData->{typ}\t$hashRefLocalData->{sensorname}\n";
 			$sthRemoteDataInsert->execute($hashRefRemoteSensor->{sensor_id}, $hashRefLocalData->{temp}, $hashRefLocalData->{hydro}, $hashRefLocalData->{radiation}, $hashRefLocalData->{time});
 		}
 		
