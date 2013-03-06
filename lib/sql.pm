@@ -4,12 +4,15 @@ package sql;
 
 use strict;
 use warnings;
+use DBI;
 use Data::Dumper;
 use Exporter;
+use Cwd 'abs_path';
+use File::Basename;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 $VERSION = '0.0.1';
 @ISA         = qw(Exporter);
-@EXPORT      = qw(sqlCreate sqlInsertHost sqlGetHost sqlInsertSensor sqlInsertValues);
+@EXPORT      = qw(sqlCreate sqlInsertHost sqlGetHost sqlInsertSensor sqlInsertValues sqlInsertYML sqlSync);
 
 #** @var $debug debug flag
 my $debug=0;
@@ -179,6 +182,7 @@ sub sqlInsertValues{
 # @retval undefined if not in DB
 #*
 sub sqlInsertYML {
+    my $path = join("/", dirname( abs_path($0) ), "../..");
     my %yml    = %{ $_[0] };
     my $conf   = YAML::XS::LoadFile("$path/mysql.yml");
     my %config = %$conf;
@@ -207,6 +211,7 @@ sub sqlInsertYML {
 # @brief sync database from local DB to remote DB
 #*
 sub sqlSync {
+    my $path = join("/", dirname( abs_path($0) ), "../..");
     my $conf   = YAML::XS::LoadFile("$path/mysql.yml");
     my %config = %$conf;
     my $dbhLocal;

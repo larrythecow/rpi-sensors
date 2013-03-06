@@ -2,30 +2,25 @@
 use strict;
 use warnings;
 
-use DBI;
 use File::Basename;
 use IO::Socket::INET;
-use Data::Dumper;
-use Storable;
-use FreezeThaw qw(freeze thaw cmpStr safeFreeze cmpStrHard);
+use FreezeThaw qw(freeze thaw);
 use YAML::XS;
 use Cwd 'abs_path';
 BEGIN { push @INC, join( "/", dirname( abs_path($0) ), "../../lib/" ) }
-use sensors;
 use sql;
-
-my $path = join("/", dirname( abs_path($0) ), "../..");
 
 #** @function public server() 
 # @brief listen for incomming UDP packages and forward them to sqlInsertUDP()
 #*
 sub server {
+    my $path = join("/", dirname( abs_path($0) ), "../..");
     my $node = YAML::XS::LoadFile("$path/node.yml");
     my %nodeHash = %$node;
 
     my $sock;
-    my $text;
-    my $source;
+    my $payload;
+    my $sourceRAW;
     my $sourcePort;
     my $sourceIP;
     my $sourceHost;
@@ -35,15 +30,14 @@ sub server {
         Proto => getprotobyname('udp'),
     ) or die "Can't bind : $@\n";
 
-    print "IP: $nodeHash{ip}\n";
+    print "LocalIP: $nodeHash{ip}\n";
 
-    while ( my $source = $sock->recv( $text, 4096, 0 ) ) {
-        ( $sourcePort, $sourceIP ) = sockaddr_in($source);
+    while ( my $sourceRAW = $sock->recv( $payload, 4096, 0 ) ) {
+        ( $sourcePort, $sourceIP ) = sockaddr_in($sourceRAW);
         $sourceHost = gethostbyaddr( $sourceIP, AF_INET );
-        my %conf = thaw($text);
+        my %conf = thaw($payload);
 	if( (defined $sourceHost) ){
-		print "ip: ", inet_ntoa($sourceIP);
-		print " host: $sourceHost port: $sourcePort\n";
+		print "\n", inet_ntoa($sourceIP), ":$sourcePort $sourceHost\n";
 		sqlInsertYML( \%conf, $sourceHost, inet_ntoa($sourceIP) );
 	}
 	else{
