@@ -8,3 +8,4 @@ test/
 net/config.yml
 sensor.yml
 node.yml
+*~

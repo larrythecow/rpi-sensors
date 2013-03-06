@@ -16,31 +16,9 @@ use sql;
 
 my $path = join("/", dirname( abs_path($0) ), "../..");
 
-sub sql {
-    my %yml    = %{ $_[0] };
-    my $conf   = YAML::XS::LoadFile("$path/mysql.yml");
-    my %config = %$conf;
-    my $dbh;
-    my $sth;
-    my $sthCheck;
-    my $host;
-    my $sensor;
-
-    $dbh = DBI->connect(
-        "dbi:mysql::$config{'DB'}->{'host'}",
-        $config{'DB'}->{'user'},
-        $config{'DB'}->{'pass'}
-    ) or die $dbh->errstr;
-
-    sqlCreate( $dbh, $conf );
-    sqlInsertHost( $dbh, $_[1], $_[2] );
-    $host = sqlGetHost($dbh, $_[1], $_[2] );
-    sqlInsertSensor($dbh, \%yml, $host);
-    sqlInsertValues($dbh, \%yml, $host);
-
-    $dbh->disconnect();
-}
-
+#** @function public server() 
+# @brief listen for incomming UDP packages and forward them to sqlInsertUDP()
+#*
 sub server {
     my $node = YAML::XS::LoadFile("$path/node.yml");
     my %nodeHash = %$node;
@@ -66,7 +44,7 @@ sub server {
 	if( (defined $sourceHost) ){
 		print "ip: ", inet_ntoa($sourceIP);
 		print " host: $sourceHost port: $sourcePort\n";
-		sql( \%conf, $sourceHost, inet_ntoa($sourceIP) );
+		sqlInsertYML( \%conf, $sourceHost, inet_ntoa($sourceIP) );
 	}
 	else{
 		print "Unable to resolve ", inet_ntoa($sourceIP), "\n";

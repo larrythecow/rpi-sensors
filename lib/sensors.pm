@@ -204,7 +204,7 @@ sub getTempDS1820{
 	}
 }
 
-#** @function public fillArray ($func, $count, $sleep, $sensorID])
+#** @function public fillArray ($func, $count, $sleep, $sensorID)
 # @brief call sensor function count-times and return AVG value
 # @param func required $_[0] sensor function which will be called 
 # @param count required $_[1] run $func n time

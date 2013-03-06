@@ -16,7 +16,9 @@ use sql;
 my $DEBUG=2;
 my $path = join("/", dirname( abs_path($0) ), "../..");
 
-
+#** @function public rrdGraph() 
+# @brief create graph's and html page from mysql DB 
+#*
 sub rrdGraph {
     my $conf   = YAML::XS::LoadFile("$path/mysql.yml");
     my %config = %$conf;
