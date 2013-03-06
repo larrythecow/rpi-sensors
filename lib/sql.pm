@@ -255,10 +255,10 @@ sub sqlSync {
 		$sthRemoteSensorCheck->execute($hashRefRemoteHost->{host_id}, $hashRefLocalSensor->{typ}, $hashRefLocalSensor->{name}, $hashRefLocalSensor->{uuid});
 		my $hashRefRemoteSensorCheck = $sthRemoteSensorCheck->fetchrow_hashref;
 		if(defined $hashRefRemoteSensorCheck){
-			print "\t\tDEF: $hashRefRemoteHost->{host_id} $hashRefLocalSensor->{sensor_id}\t$hashRefLocalSensor->{uuid}\t$hashRefLocalSensor->{typ}\t$hashRefLocalSensor->{name}\n";
+			print "\tDEFINED:\trem:$hashRefRemoteHost->{host_id}\tloc:$hashRefLocalSensor->{sensor_id}\t$hashRefLocalSensor->{uuid}\t$hashRefLocalSensor->{typ}\t$hashRefLocalSensor->{name}\n";
 		}
 		else{   
-			print "\t\tUNDEF: $hashRefRemoteHost->{host_id} $hashRefLocalSensor->{sensor_id}\t$hashRefLocalSensor->{uuid}\t$hashRefLocalSensor->{typ}\t$hashRefLocalSensor->{name}\n";
+			print "\t\tUNDEFINED:\trem:$hashRefRemoteHost->{host_id}\tloc:$hashRefLocalSensor->{sensor_id}\t$hashRefLocalSensor->{uuid}\t$hashRefLocalSensor->{typ}\t$hashRefLocalSensor->{name}\n";
 			my $sthRemoteSensorInsert = $dbhRemote->prepare("INSERT INTO sensor(host_id, typ, name, uuid) VALUES (?,?,?,?);");
 			$sthRemoteSensorInsert->execute( $hashRefRemoteHost->{'host_id'}, $hashRefLocalSensor->{typ}, $hashRefLocalSensor->{name}, $hashRefLocalSensor->{uuid} );
 		}
@@ -296,7 +296,7 @@ sub sqlSync {
 	$sthRemoteDataInsert->finish() or die $dbhLocal->errstr;
 	$sthRemoteSensor->finish() or die $dbhLocal->errstr;
 		
-print "\ncount: $tmpCount++\t NAcount: $NAcount";
+print "\ncount: $tmpCount++\t NotAvailableCount: $NAcount";
 
     $dbhLocal->disconnect();
     $dbhRemote->disconnect();
