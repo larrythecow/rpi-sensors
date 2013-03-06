@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/opt/rpi-sensors/bin/net/sqlsync.pl

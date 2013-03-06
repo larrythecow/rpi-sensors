@@ -1,0 +1,2 @@
+#!/bin/bash
+/opt/rpi-sensors/bin/net/rrd.pl

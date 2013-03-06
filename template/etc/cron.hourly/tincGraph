@@ -1,0 +1,5 @@
+#!/bin/bash
+rm /tmp/tinc.graph
+rm /var/www/tinc.svg
+tincctl dump graph --pidfile=/var/run/tinc.vpn.pid > /tmp/tinc.graph
+/usr/bin/dot -Tsvg /tmp/tinc.graph -o /var/www/tinc.svg 
