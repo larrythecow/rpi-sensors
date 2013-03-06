@@ -3,4 +3,12 @@ DB:
    adapter: mysql
    database: sensor
    user: root
-   pass: pfwaKTrYCWE
+   pass: PASSWD
+
+REMOTE1:
+   host: node03.local
+   adapter: mysql
+   database: rpisensor
+   user: rpisensor
+   pass: PASSWD
+

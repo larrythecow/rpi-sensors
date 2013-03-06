@@ -65,7 +65,7 @@ sub server {
         my %conf = thaw($text);
 	if( (defined $sourceHost) ){
 		print "ip: ", inet_ntoa($sourceIP);
-		print "host: $sourceHost port: $sourcePort\n";
+		print " host: $sourceHost port: $sourcePort\n";
 		sql( \%conf, $sourceHost, inet_ntoa($sourceIP) );
 	}
 	else{
