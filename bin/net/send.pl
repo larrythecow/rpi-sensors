@@ -5,14 +5,15 @@ use warnings "all";
 use IO::Socket::INET;
 use Storable;
 use YAML::XS;
+use File::Basename;
 use FreezeThaw qw(freeze thaw cmpStr safeFreeze cmpStrHard);
 
 my $sock;
-my $path="/opt/tmp";
+my $path=join("/", dirname($0), "../..");
 my $fh;
 my @temp;
 
-my $data = YAML::XS::LoadFile("$path/test.yml");
+my $data = YAML::XS::LoadFile("$path/tmp/test.yml");
 my %dataHash = %$data;
 my $node = YAML::XS::LoadFile("$path/node.yml");
 my %nodeHash = %$node;
