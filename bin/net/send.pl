@@ -13,7 +13,7 @@ my $path=join("/", dirname($0), "../..");
 my $fh;
 my @temp;
 
-my $data = YAML::XS::LoadFile("$path/tmp/test.yml");
+my $data = YAML::XS::LoadFile("$path/tmp/current.yml");
 my %dataHash = %$data;
 my $node = YAML::XS::LoadFile("$path/node.yml");
 my %nodeHash = %$node;
