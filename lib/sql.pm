@@ -154,13 +154,13 @@ sub sqlInsertValues{
 	      	}
 		print "\t\t$id\t";
                 if ( $type eq "dht11") {
-		    print "$yml{$type}->{'temperature'}->[$i]\t$yml{$type}->{'humidity'}->[$i]\n";
+		    print "temp:$yml{$type}->{'temperature'}->[$i]\thumi:$yml{$type}->{'humidity'}->[$i]\n";
                     $sthCheck->execute($_[2]->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
                     $sensor = $sthCheck->fetchrow_hashref;
                     $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
                 }
                 else {
-		    print "$yml{$type}->{'temperature'}->[$i]\n";
+		    print "temp:$yml{$type}->{'temperature'}->[$i]\n";
                     $sthCheck->execute($_[2]->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
                     $sensor = $sthCheck->fetchrow_hashref;
                     $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
