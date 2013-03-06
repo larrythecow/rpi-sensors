@@ -64,7 +64,7 @@ sub rrdGraph {
                                 temperature => "GAUGE",
                         ); 
 		}
-		my $sthData = $dbhLocal->prepare("select data.sensor_id, data.temp, data.hydro, UNIX_TIMESTAMP(data.time) as time from data inner join sensor using(sensor_id) where data.sensor_id = ? ORDER BY time") or die $dbhLocal->errstr;
+		my $sthData = $dbhLocal->prepare("select data.sensor_id, data.temp, data.humi, UNIX_TIMESTAMP(data.time) as time from data inner join sensor using(sensor_id) where data.sensor_id = ? ORDER BY time") or die $dbhLocal->errstr;
 		$sthData->execute($hashRefSensor->{sensor_id});
 		while(my $hashRefData = $sthData->fetchrow_hashref){
 			if($DEBUG >2){
@@ -75,7 +75,7 @@ sub rrdGraph {
                                         "/tmp/$rrdFileName.rrd",
                                         $hashRefData->{time},
                                         temperature => $hashRefData->{temp},
-					humidity => $hashRefData->{hydro},
+					humidity => $hashRefData->{humi},
                                 );
 			}
 			else{

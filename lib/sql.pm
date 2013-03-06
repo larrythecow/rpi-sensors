@@ -59,7 +59,7 @@ sub sqlCreate {
         sensor_id INT,
         FOREIGN KEY (sensor_id) REFERENCES sensor(sensor_id),
         temp FLOAT,
-        hydro FLOAT,
+        humi FLOAT,
         radiation FLOAT,
         time TIMESTAMP
         ) engine innodb;"
@@ -143,7 +143,7 @@ sub sqlInsertValues{
     my %yml    = %{ $_[1] };
     my $sensor;
     my $sthCheck = $_[0]->prepare("select sensor.sensor_id from host inner join sensor using (host_id) where host.host_id=? and typ like ? and sensor.name like ? and uuid like ?;");
-    my $sth = $_[0]->prepare("INSERT INTO data(sensor_id, temp, hydro, time ) VALUES (?,?,?, FROM_UNIXTIME(?));");
+    my $sth = $_[0]->prepare("INSERT INTO data(sensor_id, temp, humi, time ) VALUES (?,?,?, FROM_UNIXTIME(?));");
     foreach my $type ( keys %yml ) {
         print "\t$type\n";
             my $i = 0;
@@ -272,7 +272,7 @@ sub sqlSync {
 	my $sthLocalData = $dbhLocal->prepare("select *, host.name as hostname, sensor.name as sensorname from data left join sensor using (sensor_id) left join host using (host_id)") or die $dbhLocal->errstr;
 	my $sthRemoteDataCheck = $dbhRemote->prepare("select *, host.name as hostname, sensor.name as sensorname from data left join sensor using (sensor_id) left join host using (host_id)
 		where ip=? and host.name like ? and typ like ? and sensor.name like ? and time=TIMESTAMP(?)");
-	my $sthRemoteDataInsert = $dbhRemote->prepare("INSERT INTO data (sensor_id, temp, hydro, radiation, time) VALUES(?,?,?,?,?) ");
+	my $sthRemoteDataInsert = $dbhRemote->prepare("INSERT INTO data (sensor_id, temp, humi, radiation, time) VALUES(?,?,?,?,?) ");
 	my $sthRemoteSensor = $dbhRemote->prepare("select sensor_id from sensor inner join host using (host_id) where ip=? and host.name like ? and typ like ? and sensor.name like ?");
 	$sthLocalData->execute();
 	while(my $hashRefLocalData = $sthLocalData->fetchrow_hashref){
@@ -286,7 +286,7 @@ sub sqlSync {
 			my $hashRefRemoteSensor = $sthRemoteSensor->fetchrow_hashref;
 			print "rem:$hashRefRemoteSensor->{sensor_id}\tloc:$hashRefLocalData->{sensor_id}\t";
 			print "$hashRefLocalData->{ip}\t$hashRefLocalData->{time}\t$hashRefLocalData->{hostname}\t$hashRefLocalData->{uuid}\t$hashRefLocalData->{typ}\t$hashRefLocalData->{sensorname}\n";
-			$sthRemoteDataInsert->execute($hashRefRemoteSensor->{sensor_id}, $hashRefLocalData->{temp}, $hashRefLocalData->{hydro}, $hashRefLocalData->{radiation}, $hashRefLocalData->{time});
+			$sthRemoteDataInsert->execute($hashRefRemoteSensor->{sensor_id}, $hashRefLocalData->{temp}, $hashRefLocalData->{humi}, $hashRefLocalData->{radiation}, $hashRefLocalData->{time});
 		}
 		
 		

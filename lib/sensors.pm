@@ -217,7 +217,7 @@ sub fillArray{
 	my $i;
 	#** @var @temperature stores multible temperatures
 	my @temperature;
-	#** @var @humidity stores multible hydro values 
+	#** @var @humidity stores multible humidity values 
 	my @humidity;
 	
 	my $curHydro;

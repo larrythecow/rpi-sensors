@@ -10,17 +10,16 @@ BEGIN { push @INC, join("/", dirname($0), "../lib/")  }
 use sensors;
 
 my $path=join("/", dirname($0), "../");
-my $temperature;
-my $humidity;
-my $fh;
-my $debug=1;
-
-
-my $conf = YAML::XS::LoadFile("$path/sensor.yml");
-my %yml = %$conf;
+my $debug=3;
 
 foreach my $type(keys %yml){
-	 if($debug >= 1){
+	my $temperature;
+	my $humidity;
+	my $fh;
+	my $conf = YAML::XS::LoadFile("$path/sensor.yml");
+	my %yml = %$conf;
+
+	 if($debug >= 3){
 	        print "\t$type\n";
 		}
 	my $i=0;
@@ -34,14 +33,16 @@ foreach my $type(keys %yml){
                         }
 		$yml{$type}->{'temperature'}->[$i]= "$temperature";
 		$yml{$type}->{'time'}->[$i] = time;
-		if($debug >= 1){
+		if($debug >= 3){
 			if($type eq "dht11"){
 				print "\t\t$yml{$type}->{name}->[$i]\t$id\t$temperature $humidity\n";
-				}
-			print "\t\t$yml{$type}->{name}->[$i]\t$id\t$temperature [$i]\n";
 			}
+			else{
+				print "\t\t$yml{$type}->{name}->[$i]\t$id\t$temperature [$i]\n";
+			}
+		}
 		$i++;
-                }
+	}
 }
 YAML::XS::DumpFile("$path/tmp/current.yml", $conf);
 
