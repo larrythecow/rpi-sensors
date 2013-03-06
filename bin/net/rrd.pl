@@ -72,7 +72,7 @@ sub rrdGraph {
 			}
 			if($hashRefSensor->{typ} eq "dht11"){
                                 $rrd->update(
-                                        "/tmp/$rrdFileName.rrd",
+                                        "$path/tmp/$rrdFileName.rrd",
                                         $hashRefData->{time},
                                         temperature => $hashRefData->{temp},
 					humidity => $hashRefData->{humi},
@@ -80,7 +80,7 @@ sub rrdGraph {
 			}
 			else{
 				$rrd->update(
-					"/tmp/$rrdFileName.rrd",
+					"$path/tmp/$rrdFileName.rrd",
 					$hashRefData->{time},
 					temperature => $hashRefData->{temp}
 				);

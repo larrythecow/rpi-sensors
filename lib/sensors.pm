@@ -15,12 +15,14 @@ $VERSION = '0.0.1';
 @ISA         = qw(Exporter);
 @EXPORT      = qw(getDHT11 getHidTEMPer getBCM2708 getTempDS1820 fillArray getValuesFromHash getSensorNameFromHash %func);
 
+
+# @todo fix fucking $LogPath and $path genarraly
 #** @var $fh default fileHandler
 my $fh;
 #** @var $debug debug flag
 my $debug=0;
 #** @var $LogPath debug log path
-my $LogPath="/opt/tmp/sensor-debug";
+my $LogPath="/opt/rpi-sensors/sensor-debug";
 
 #** @var %func references between sensorname and sensorfunction
 Readonly::Hash our %func=>(
