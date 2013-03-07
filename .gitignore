@@ -1,3 +1,4 @@
+*.rrd
 tmp/current.yml
 mysql.yml
 *.swp

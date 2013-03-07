@@ -27,6 +27,7 @@ sub rrdGraph {
     my $templateIndex = HTML::Template->new(filename => "$path/bin/net/index.tmpl");
     my @templateIndexData;
 
+    system("rm /opt/rpi-sensors/tmp/*rrd");
     system("rm /tmp/*rrd");
 
     $dbhLocal = DBI->connect(
