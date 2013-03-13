@@ -145,26 +145,23 @@ sub sqlInsertValues{
     my $sthCheck = $_[0]->prepare("select sensor.sensor_id from host inner join sensor using (host_id) where host.host_id=? and typ like ? and sensor.name like ? and uuid like ?;");
     my $sth = $_[0]->prepare("INSERT INTO data(sensor_id, temp, humi, time ) VALUES (?,?,?, FROM_UNIXTIME(?));");
     foreach my $type ( keys %yml ) {
-        print "\t$type\n";
+        print "\ttyp:$type\n";
             my $i = 0;
             foreach my $id ( @{ $yml{$type}->{id} } ) {
 	      	if( ($yml{$type}->{'temperature'}->[$i] eq 'U') ){
 			$i++;
 			next;
 	      	}
-		print "\t\t$id\t";
+		print "\t\tID::$id\t";
                 if ( $type eq "dht11") {
-		    print "$yml{$type}->{'temperature'}->[$i]\t$yml{$type}->{'humidity'}->[$i]\n";
-                    $sthCheck->execute($_[2]->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
-                    $sensor = $sthCheck->fetchrow_hashref;
-                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
+		    print "\ttemp:$yml{$type}->{'temperature'}->[$i]\thumi:$yml{$type}->{'humidity'}->[$i]\n";
                 }
                 else {
-		    print "$yml{$type}->{'temperature'}->[$i]\n";
-                    $sthCheck->execute($_[2]->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
-                    $sensor = $sthCheck->fetchrow_hashref;
-                    $sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
+		    print "\ttemp:$yml{$type}->{'temperature'}->[$i]\n";
                 }
+		$sthCheck->execute($_[2]->{'host_id'}, $type, $yml{$type}->{name}->[$i], $id );
+		$sensor = $sthCheck->fetchrow_hashref;
+		$sth->execute($sensor->{sensor_id}, $yml{$type}->{'temperature'}->[$i], $yml{$type}->{'humidity'}->[$i], $yml{$type}->{'time'}->[$i]);
                 $i++;
 	  }
     }
