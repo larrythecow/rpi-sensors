@@ -15,7 +15,7 @@ my @temp;
 
 my $data = YAML::XS::LoadFile("$path/tmp/current.yml");
 my %dataHash = %$data;
-my $node = YAML::XS::LoadFile("$path/node.yml");
+my $node = YAML::XS::LoadFile("$path/etc/node.yml");
 my %nodeHash = %$node;
 
 $sock = IO::Socket::INET->new(

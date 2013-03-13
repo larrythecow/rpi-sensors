@@ -20,7 +20,7 @@ my $path = join("/", dirname( abs_path($0) ), "../..");
 # @brief create graph's and html page from mysql DB 
 #*
 sub rrdGraph {
-    my $conf   = YAML::XS::LoadFile("$path/mysql.yml");
+    my $conf   = YAML::XS::LoadFile("$path/etc/mysql.yml");
     my %config = %$conf;
     my $dbhLocal;
     my $sthLocal;

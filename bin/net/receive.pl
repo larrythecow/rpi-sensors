@@ -15,7 +15,7 @@ use sql;
 #*
 sub server {
     my $path = join("/", dirname( abs_path($0) ), "../..");
-    my $node = YAML::XS::LoadFile("$path/node.yml");
+    my $node = YAML::XS::LoadFile("$path/etc/node.yml");
     my %nodeHash = %$node;
 
     my $sock;
