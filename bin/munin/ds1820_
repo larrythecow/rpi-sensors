@@ -36,7 +36,7 @@ my $sensorID;
 my $sensorType="ds1820";
 my $regex=join('', $sensorType, "_");
 my $sensorName;
-my $path = join("/", dirname( abs_path($0) ), "../");
+my $path = join("/", dirname( abs_path($0) ), "../..");
 my $temperature;
 my $humidity;
 my $logPath="/opt/tmp/";

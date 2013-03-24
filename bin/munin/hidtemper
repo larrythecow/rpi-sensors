@@ -35,7 +35,7 @@ use Munin::Plugin;
 my $sensorID;
 my $sensorType="hidtemper";
 my $sensorName;
-my $path = join("/", dirname( abs_path($0) ), "../");
+my $path = join("/", dirname( abs_path($0) ), "../..");
 my $temperature;
 my $humidity;
 my $logPath="/opt/tmp/";

@@ -35,7 +35,7 @@ my $sensorID;
 my $sensorType="dht11";
 my $regex=join('', $sensorType, "_");
 my $sensorName;
-my $path = join("/", dirname( abs_path($0) ), "../");
+my $path = join("/", dirname( abs_path($0) ), "../..");
 my $temperature;
 my $humidity;
 my $logPath="/opt/tmp/";
@@ -62,7 +62,7 @@ if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
 
 if (defined $ARGV[0] && $ARGV[0] eq 'config') {
 print <<EOM;
-graph_title	humidity and temperature of DHT11 sensor $sensorID $sensorName
+graph_title	humidity and temperature of DHT11 sensor $sensorID 
 graph_vlabel	°C and %
 graph_category	sensors
 
