@@ -11,13 +11,13 @@ use sensors;
 
 my $path=join("/", dirname($0), "../");
 my $debug=3;
+my $conf = YAML::XS::LoadFile("$path/etc/sensor.yml");
+my %yml = %$conf;
 
 foreach my $type(keys %yml){
 	my $temperature;
 	my $humidity;
 	my $fh;
-	my $conf = YAML::XS::LoadFile("$path/sensor.yml");
-	my %yml = %$conf;
 
 	 if($debug >= 3){
 	        print "\t$type\n";

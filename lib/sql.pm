@@ -181,7 +181,7 @@ sub sqlInsertValues{
 sub sqlInsertYML {
     my $path = join("/", dirname( abs_path($0) ), "../..");
     my %yml    = %{ $_[0] };
-    my $conf   = YAML::XS::LoadFile("$path/mysql.yml");
+    my $conf   = YAML::XS::LoadFile("$path/etc/mysql.yml");
     my %config = %$conf;
     my $dbh;
     my $sth;
@@ -209,7 +209,7 @@ sub sqlInsertYML {
 #*
 sub sqlSync {
     my $path = join("/", dirname( abs_path($0) ), "../..");
-    my $conf   = YAML::XS::LoadFile("$path/mysql.yml");
+    my $conf   = YAML::XS::LoadFile("$path/etc/mysql.yml");
     my %config = %$conf;
     my $dbhLocal;
     my $dbhRemote;

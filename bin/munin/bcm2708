@@ -36,7 +36,7 @@ my $sensorID;
 my $sensorType="bcm2708";
 my $regex=join('', $sensorType, "_");
 my $sensorName;
-my $path = join("/", dirname( abs_path($0) ), "../");
+my $path = join("/", dirname( abs_path($0) ), "../..");
 my $temperature;
 my $humidity;
 my $logPath="/opt/tmp/";
@@ -63,7 +63,7 @@ if (defined $ARGV[0] && $ARGV[0] eq 'autoconf') {
 
 if (defined $ARGV[0] && $ARGV[0] eq 'config') {
 print <<EOM;
-graph_title $yml{$sensorName}->{'name'}->[0] temperature of $sensorName $sensorID
+graph_title $yml{$sensorName}->{'name'}->[0] temperature of $sensorID
 graph_vlabel °C
 graph_category sensors
 
