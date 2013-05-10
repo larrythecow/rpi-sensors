@@ -27,7 +27,7 @@ sub rrdGraph {
     my $templateIndex = HTML::Template->new(filename => "$path/bin/net/index.tmpl");
     my @templateIndexData;
 
-    system("rm /opt/rpi-sensors/tmp/*rrd");
+    system("rm $path/tmp/*rrd");
     system("rm /tmp/*rrd");
 
     $dbhLocal = DBI->connect(
@@ -53,7 +53,7 @@ sub rrdGraph {
 		push(@templateHostDataTable, {"ANCHORNAME" => "$hashRefSensor->{typ}$hashRefSensor->{sensorname}", "TYPE" => $hashRefSensor->{typ}, "NAME" => $hashRefSensor->{sensorname}, "ID" => $hashRefSensor->{uuid} });
 
 		my $rrdFileName = "$hashRefSensor->{hostname}_$hashRefSensor->{typ}_$hashRefSensor->{sensorname}";
-		my $rrd = RRD::Simple->new( file => "/tmp/$rrdFileName.rrd") ;
+		my $rrd = RRD::Simple->new( file => "$path/tmp/$rrdFileName.rrd") ;
 		if($hashRefSensor->{typ} eq "dht11"){
 			$rrd->create(
         		        temperature => "GAUGE",
