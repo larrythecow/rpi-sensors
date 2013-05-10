@@ -1,13 +1,21 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
 use Net::Jabber qw(Client);
 use Data::Dumper;
+use File::Basename;
+use YAML::XS;
+my $path=join("/", dirname($0), "../..");
+
+my $node = YAML::XS::LoadFile("$path/etc/node.yml");
+my %nodeHash = %$node;
 
 my $server = "jabber.ccc.de";
 my $port = "5222";
 my $username = "monitoring";
 my $password = "3zKCQMlg";
-my $resource = "autosend";
+my $resource =  $nodeHash{name};
 my @hosts = ("192.168.240.1", "192.168.240.2", "192.168.240.3", "192.168.240.50", "192.168.240.51");
 
 
